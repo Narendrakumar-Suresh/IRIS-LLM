@@ -1,18 +1,40 @@
-import { Alert, AlertDescription } from "@/components/ui/alert";
+"use client";
+import { useEffect, useState } from "react";
+import { Button } from "./ui/button";
+import { Copy, Download } from "lucide-react";
 
-export default function Response() {
+export default function Response({ markdown }) {
+  const [html, setHtml] = useState("");
+
+  useEffect(() => {
+    // Load Marked.js dynamically if not already available
+    if (!window.marked) {
+      const script = document.createElement("script");
+      script.src = "https://cdn.jsdelivr.net/npm/marked/marked.min.js";
+      script.async = true;
+      script.onload = () => {
+        setHtml(window.marked.parse(markdown));
+      };
+      document.body.appendChild(script);
+    } else {
+      setHtml(window.marked.parse(markdown));
+    }
+  }, [markdown]);
+
   return (
-    <Alert
-      variant={"default"}
-      className="max-w-80 p-2 m-8 rounded-2xl bg-blue-200"
-    >
-      {/* <AlertTitle className="text-xs text-slate-600">You</AlertTitle> */}
-      <AlertDescription className="text-xl text-black">
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Earum labore
-        doloribus molestias in possimus, inventore rem quidem quae cumque
-        mollitia veritatis eum quam iusto repellat consectetur natus dignissimos
-        quaerat animi.
-      </AlertDescription>
-    </Alert>
+    <div className="border-2 rounded-2xl p-2 mb-8">
+      <div
+        className="w-full text-black prose p-2 "
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+      <div className="flex m-2 w-24 justify-around">
+        <Button>
+          <Copy />
+        </Button>
+        <Button>
+          <Download />
+        </Button>
+      </div>
+    </div>
   );
 }

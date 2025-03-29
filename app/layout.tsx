@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -29,6 +30,10 @@ export default function RootLayout({
       >
         {children}
       </body>
+      <Script
+        src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"
+        strategy="lazyOnload"
+      />
     </html>
   );
 }
