@@ -95,7 +95,11 @@ export default function Messenger() {
           onClick={sendHandler}
           disabled={loading} // Disable button while loading
         >
-          {loading ? <Loader /> : <SendHorizontal />}
+          {loading ? (
+            <Loader className="motion-preset-spin" />
+          ) : (
+            <SendHorizontal />
+          )}
         </Button>
       </div>
     </div>
