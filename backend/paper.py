@@ -106,5 +106,5 @@ def process_papers(papers):
         print("No text extracted. Context file not created.")
 
 # Fetch papers and process them
-papers = fetch_arxiv_papers("RAG in Large Language Models")
-process_papers(papers)
+# papers = fetch_arxiv_papers("RAG in Large Language Models")
+# process_papers(papers)
