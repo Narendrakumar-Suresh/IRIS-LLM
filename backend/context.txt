@@ -1,0 +1,883 @@
+Title: In Defense of RAG in the Era of Long-Context Language Models
+Authors: Tan Yu, Anbang Xu, Rama Akkiraju
+Summary: Overcoming the limited context limitations in early-generation LLMs,
+retrieval-augmented generation (RAG) has been a reliable solution for
+context-based answer generation in the past. Recently, the emergence of
+long-context LLMs allows the models to incorporate much longer text sequences,
+making RAG less attractive. Recent studies show that long-context LLMs
+significantly outperform RAG in long-context applications. Unlike the existing
+works favoring the long-context LLM over RAG, we argue that the extremely long
+context in LLMs suffers from a diminished focus on relevant information and
+leads to potential degradation in answer quality. This paper revisits the RAG
+in long-context answer generation. We propose an order-preserve
+retrieval-augmented generation (OP-RAG) mechanism, which significantly improves
+the performance of RAG for long-context question-answer applications. With
+OP-RAG, as the number of retrieved chunks increases, the answer quality
+initially rises, and then declines, forming an inverted U-shaped curve. There
+exist sweet points where OP-RAG could achieve higher answer quality with much
+less tokens than long-context LLM taking the whole context as input. Extensive
+experiments on public benchmark demonstrate the superiority of our OP-RAG.
+PDF Link: http://arxiv.org/pdf/2409.01666v1
+Extracted Content:
+In Defense of RAG in the Era of Long-Context Language Models
+Tan Yu
+NVIDIA
+Santa Clara, California
+United States
+tayu@nvidia.comAnbang Xu
+NVIDIA
+Santa Clara, California
+United States
+anbangx@nvidia.comRama Akkiraju
+NVIDIA
+Santa Clara, California
+United States
+rakkiraju@nvidia.com
+Abstract
+Overcoming the limited context limitations in
+early-generation LLMs, retrieval-augmented
+generation (RAG) has been a reliable solution
+for context-based answer generation in the past.
+Recently, the emergence of long-context LLMs
+allows the models to incorporate much longer
+text sequences, making RAG less attractive.
+Recent studies show that long-context LLMs
+significantly outperform RAG in long-context
+applications. Unlike the existing works favor-
+ing the long-context LLM over RAG, we ar-
+gue that the extremely long context in LLMs
+suffers from a diminished focus on relevant in-
+formation and leads to potential degradation in
+answer quality. This paper revisits the RAG in
+long-context answer generation. We propose
+an order-preserve retrieval-augmented genera-
+tion (OP-RAG) mechanism, which significantly
+improves the performance of RAG for long-
+context question-answer applications. With
+OP-RAG, as the number of retrieved chunks
+increases, the answer quality initially rises, and
+then declines, forming an inverted U-shaped
+curve. There exist sweet points where OP-RAG
+could achieve higher answer quality with much
+less tokens than long-context LLM taking the
+whole context as input. Extensive experiments
+on public benchmark demonstrate the superior-
+ity of our OP-RAG.
+1 Introduction
+Due to the limited context window length
+(eg, 4096) of early-generation large language
+models (LLMs), retrieval augmented generation
+(RAG) (Guu et al., 2020; Lewis et al., 2020) is an
+indispensable choice to handle a large-scale context
+corpus. Since the answer quality is heavily depen-
+dent on the performance of the retrieval model, a
+lot of efforts are devoted to improving the retrieval
+recall/precision when designing the RAG system.
+Recently, the state-of-art LLMs support much
+longer context windows. For example, GPT-
+4O (OpenAI, 2023), Claudi-3.5 (Anthropic, 2024),
+(a) F1 score.
+(b) Input token count.
+Figure 1: Comparisons between the proposed order-
+preserve retrieval-augmented generation (OP-RAG) and
+approaches using long-context LLMs without RAG
+on En.QA dataset of ∞Bench. Our OP-RAG uses
+Llama3.1-70B as generator, which significantly outper-
+forms its counterpart using Llama3.1-70B without RAG.
+Llama3.1 (Meta, 2024b), Phi-3 (Abdin et al., 2024),
+and Mistral-Large2 (AI, 2024) all support 128-K
+context. Gemini-1.5-pro even supports a 1M con-
+text window. The recent emergence of long-context
+LLMs naturally leads to the question: is RAG nec-
+essary in the age of long-context LLMs? Li et al.
+(2024) recently systematically compares RAG with
+long-context (LC) LLMs (w/o RAG) and demon-
+strates that LC LLMs consistently outperform RAG
+in terms of answer quality.
+In this work, we re-examine the effectiveness
+of RAG in long-context answer generation. We
+observe that the order of retrieved chunks in thearXiv:2409.01666v1  [cs.CL]  3 Sep 2024
+context of LLM is vital for the answer quality. Dif-
+ferent from traditional RAG which places the re-
+trieved chunks in a relevance-descending order, we
+propose to preserve the order of retrieved chunks
+in the original text. Our experiments show that the
+proposed order-preserving mechanism significantly
+improves the answer quality of RAG.
+Meanwhile, using the proposed order-preserve
+RAG, as the number of retrieved chunks increases,
+the answer quality initially rises and then declines.
+This is because, with more retrieved chunks, the
+model has access to more potentially relevant in-
+formation, which improves the chances of retriev-
+ing the correct context needed to generate a high-
+quality answer. However, as more chunks are re-
+trieved, the likelihood of introducing irrelevant or
+distracting information also increases. This excess
+information can confuse the model, leading to a
+decline in answer quality. The trade-off, therefore,
+is between improving recall by retrieving more
+context and maintaining precision by limiting dis-
+tractions. The optimal point is where the balance
+between relevant and irrelevant information maxi-
+mizes the quality of the answer. Beyond this point,
+the introduction of too much irrelevant information
+degrades the model’s performance. It explains the
+inferior performance of the approach taking the
+whole long context as the input of LLM.
+Different from the conclusion from Li et al.
+(2024), with the proposed order-preserving mech-
+anism, RAG achieves higher answer quality com-
+pared with its counterparts that rely solely on Long-
+Context LLMs. As shown in Figure 4a, On En.QA
+dataset of ∞Bench (Zhang et al., 2024), using only
+16K retrieved tokens, we achieve 44.43F1 score
+with Llama3.1-70B. In contrast, without RAG,
+Llama3.1-70B making full use of 128K context
+only achieves 34.32F1 score, GPT-4O achieves
+only 32.36F1 score and Gemini-1.5-Pro obtains
+only43.08F1 score as evaluated by Li et al. (2024).
+That is, RAG could achieve a higher F1 score even
+with a significant reduction on input length.
+2 Related Work
+Retrieval-augmented generation. By incorporat-
+ing the external knowledge as context, retrieval-
+augmented generation (RAG) (Guu et al., 2020;
+Lewis et al., 2020; Mialon et al., 2023) allows lan-
+guage model to access up-to-date and specific in-
+formation, reducing hallucinations and improving
+factual accuracy. Before the era of long-context
+Figure 2: Vanilla RAG versus the proposed order-
+preserve the RAG. As shown in the example, a long
+document is cropped into 13chunks, {ci}13
+i=1. The sim-
+ilarity score is appended to each chunk. We retrieve
+top 4 chunks with the highest similarity scores. Vanilla
+RAG places the chunks in a score-descending order,
+whereas the proposed order-preserve RAG places the
+chunks based on the order in the original document.
+LLMs, RAG is a promising solution to overcoming
+the limitation of short context window.
+Long-context LLM. To support the long sequence
+of language models, many efforts have been de-
+voted to improving the computing efficiency of
+self-attention (Choromanski et al., 2020; Zaheer
+et al., 2020; Tay et al., 2020; Dao et al., 2022; Dao,
+2024) and boosting extensibility of positional en-
+coding (Press et al., 2021; Sun et al., 2022; Chen
+et al., 2023). Recently, the flagship LLMs such as
+GPT-4O (OpenAI, 2023), Gemini-1.5-Pro (Reid
+et al., 2024), Claudi-3.5 (Anthropic, 2024), Grok-
+2 (xAI, 2024), and Llama3.1 (Meta, 2024a) have
+supported extremely large context. With the ex-
+istence of long-context LLMs, RAG is no longer
+a indispensable module for long-context question-
+answering task. Recently, Li et al. (2024) con-
+cludes that using long-context without RAG could
+significantly outperforms RAG. Different from the
+conclusion from (Li et al., 2024), in this work,
+we demonstrate the proposed order-preserve RAG
+could beat the long-context LLMs without RAG.
+3 Order-Preserve RAG
+Let us denote the long textual context, e.g., a long
+document, by d. We split dintoNchunks sequen-
+tially and uniformly, {ci}N
+i=1. The index iimplies
+the sequential order of the chunk ciind. That is,
+ci−1denotes the chunk before ciwhereas ci+1de-
+notes the chunk right after ci. Given a query q, we
+obtain the relevance score of the chunk ciby com-
+puting cosine similarity between the embedding of
+qand that of ci:
+si= cos(emb( q),emb(ci)), (1)
+================================================================================
+Title: Modular RAG: Transforming RAG Systems into LEGO-like Reconfigurable Frameworks
+Authors: Yunfan Gao, Yun Xiong, Meng Wang, Haofen Wang
+Summary: Retrieval-augmented Generation (RAG) has markedly enhanced the capabilities
+of Large Language Models (LLMs) in tackling knowledge-intensive tasks. The
+increasing demands of application scenarios have driven the evolution of RAG,
+leading to the integration of advanced retrievers, LLMs and other complementary
+technologies, which in turn has amplified the intricacy of RAG systems.
+However, the rapid advancements are outpacing the foundational RAG paradigm,
+with many methods struggling to be unified under the process of
+"retrieve-then-generate". In this context, this paper examines the limitations
+of the existing RAG paradigm and introduces the modular RAG framework. By
+decomposing complex RAG systems into independent modules and specialized
+operators, it facilitates a highly reconfigurable framework. Modular RAG
+transcends the traditional linear architecture, embracing a more advanced
+design that integrates routing, scheduling, and fusion mechanisms. Drawing on
+extensive research, this paper further identifies prevalent RAG
+patterns-linear, conditional, branching, and looping-and offers a comprehensive
+analysis of their respective implementation nuances. Modular RAG presents
+innovative opportunities for the conceptualization and deployment of RAG
+systems. Finally, the paper explores the potential emergence of new operators
+and paradigms, establishing a solid theoretical foundation and a practical
+roadmap for the continued evolution and practical deployment of RAG
+technologies.
+PDF Link: http://arxiv.org/pdf/2407.21059v1
+Extracted Content:
+1
+Modular RAG: Transforming RAG Systems into
+LEGO-like Reconfigurable Frameworks
+Yunfan Gao, Yun Xiong, Meng Wang, Haofen Wang
+Abstract —Retrieval-augmented Generation (RAG) has
+markedly enhanced the capabilities of Large Language Models
+(LLMs) in tackling knowledge-intensive tasks. The increasing
+demands of application scenarios have driven the evolution
+of RAG, leading to the integration of advanced retrievers,
+LLMs and other complementary technologies, which in turn
+has amplified the intricacy of RAG systems. However, the rapid
+advancements are outpacing the foundational RAG paradigm,
+with many methods struggling to be unified under the process
+of “retrieve-then-generate”. In this context, this paper examines
+the limitations of the existing RAG paradigm and introduces
+the modular RAG framework. By decomposing complex RAG
+systems into independent modules and specialized operators, it
+facilitates a highly reconfigurable framework. Modular RAG
+transcends the traditional linear architecture, embracing a
+more advanced design that integrates routing, scheduling, and
+fusion mechanisms. Drawing on extensive research, this paper
+further identifies prevalent RAG patterns—linear, conditional,
+branching, and looping—and offers a comprehensive analysis
+of their respective implementation nuances. Modular RAG
+presents innovative opportunities for the conceptualization
+and deployment of RAG systems. Finally, the paper explores
+the potential emergence of new operators and paradigms,
+establishing a solid theoretical foundation and a practical
+roadmap for the continued evolution and practical deployment
+of RAG technologies.
+Index Terms —Retrieval-augmented generation, large language
+model, modular system, information retrieval
+I. I NTRODUCTION
+LARGE Language Models (LLMs) have demonstrated
+remarkable capabilities, yet they still face numerous
+challenges, such as hallucination and the lag in information up-
+dates [1]. Retrieval-augmented Generation (RAG), by access-
+ing external knowledge bases, provides LLMs with important
+contextual information, significantly enhancing their perfor-
+mance on knowledge-intensive tasks [2]. Currently, RAG, as
+an enhancement method, has been widely applied in various
+practical application scenarios, including knowledge question
+answering, recommendation systems, customer service, and
+personal assistants. [3]–[6]
+During the nascent stages of RAG , its core framework is
+constituted by indexing, retrieval, and generation, a paradigm
+referred to as Naive RAG [7]. However, as the complexity
+of tasks and the demands of applications have escalated, the
+Yunfan Gao is with Shanghai Research Institute for Intelligent Autonomous
+Systems, Tongji University, Shanghai, 201210, China.
+Yun Xiong is with Shanghai Key Laboratory of Data Science, School of
+Computer Science, Fudan University, Shanghai, 200438, China.
+Meng Wang and Haofen Wang are with College of Design and Innovation,
+Tongji University, Shanghai, 20092, China. (Corresponding author: Haofen
+Wang. E-mail: carter.whfcarter@gmail.com)limitations of Naive RAG have become increasingly apparent.
+As depicted in Figure 1, it predominantly hinges on the
+straightforward similarity of chunks, result in poor perfor-
+mance when confronted with complex queries and chunks with
+substantial variability. The primary challenges of Naive RAG
+include: 1) Shallow Understanding of Queries. The semantic
+similarity between a query and document chunk is not always
+highly consistent. Relying solely on similarity calculations
+for retrieval lacks an in-depth exploration of the relationship
+between the query and the document [8]. 2) Retrieval Re-
+dundancy and Noise. Feeding all retrieved chunks directly
+into LLMs is not always beneficial. Research indicates that
+an excess of redundant and noisy information may interfere
+with the LLM’s identification of key information, thereby
+increasing the risk of generating erroneous and hallucinated
+responses. [9]
+To overcome the aforementioned limitations, Advanced
+RAG paradigm focuses on optimizing the retrieval phase,
+aiming to enhance retrieval efficiency and strengthen the
+utilization of retrieved chunks. As shown in Figure 1 ,typical
+strategies involve pre-retrieval processing and post-retrieval
+processing. For instance, query rewriting is used to make
+the queries more clear and specific, thereby increasing the
+accuracy of retrieval [10], and the reranking of retrieval results
+is employed to enhance the LLM’s ability to identify and
+utilize key information [11].
+Despite the improvements in the practicality of Advanced
+RAG, there remains a gap between its capabilities and real-
+world application requirements. On one hand, as RAG tech-
+nology advances, user expectations rise, demands continue to
+evolve, and application settings become more complex. For
+instance, the integration of heterogeneous data and the new
+demands for system transparency, control, and maintainability.
+On the other hand, the growth in application demands has
+further propelled the evolution of RAG technology.
+As shown in Figure 2, to achieve more accurate and efficient
+task execution, modern RAG systems are progressively inte-
+grating more sophisticated function, such as organizing more
+refined index base in the form of knowledge graphs, integrat-
+ing structured data through query construction methods, and
+employing fine-tuning techniques to enable encoders to better
+adapt to domain-specific documents.
+In terms of process design, the current RAG system has
+surpassed the traditional linear retrieval-generation paradigm.
+Researchers use iterative retrieval [12] to obtain richer con-
+text, recursive retrieval [13] to handle complex queries, and
+adaptive retrieval [14] to provide overall autonomy and flex-
+ibility. This flexibility in the process significantly enhancesarXiv:2407.21059v1  [cs.CL]  26 Jul 2024
+2
+Fig. 1. Cases of Naive RAG and Advanced RAG.When faced with complex
+questions, both encounter limitations and struggle to provide satisfactory
+answers. Despite the fact that Advanced RAG improves retrieval accuracy
+through hierarchical indexing, pre-retrieval, and post-retrieval processes, these
+relevant documents have not been used correctly.
+the expressive power and adaptability of RAG systems, en-
+abling them to better adapt to various application scenarios.
+However, this also makes the orchestration and scheduling of
+workflows more complex, posing greater challenges to system
+design. Specifically, RAG currently faces the following new
+challenges:
+Complex data sources integration. RAG are no longer
+confined to a single type of unstructured text data source but
+have expanded to include various data types, such as semi-
+structured data like tables and structured data like knowledge
+graphs [15]. Access to heterogeneous data from multiple
+sources can provide the system with a richer knowledge
+background, and more reliable knowledge verification capa-
+bilities [16].
+New demands for system interpretability, controllability,
+Fig. 2. Case of current Modular RAG.The system integrates diverse data
+and more functional components. The process is no longer confined to linear
+but is controlled by multiple control components for retrieval and generation,
+making the entire system more flexible and complex.
+================================================================================
+Title: RAG-WM: An Efficient Black-Box Watermarking Approach for Retrieval-Augmented Generation of Large Language Models
+Authors: Peizhuo Lv, Mengjie Sun, Hao Wang, Xiaofeng Wang, Shengzhi Zhang, Yuxuan Chen, Kai Chen, Limin Sun
+Summary: In recent years, tremendous success has been witnessed in Retrieval-Augmented
+Generation (RAG), widely used to enhance Large Language Models (LLMs) in
+domain-specific, knowledge-intensive, and privacy-sensitive tasks. However,
+attackers may steal those valuable RAGs and deploy or commercialize them,
+making it essential to detect Intellectual Property (IP) infringement. Most
+existing ownership protection solutions, such as watermarks, are designed for
+relational databases and texts. They cannot be directly applied to RAGs because
+relational database watermarks require white-box access to detect IP
+infringement, which is unrealistic for the knowledge base in RAGs. Meanwhile,
+post-processing by the adversary's deployed LLMs typically destructs text
+watermark information. To address those problems, we propose a novel black-box
+"knowledge watermark" approach, named RAG-WM, to detect IP infringement of
+RAGs. RAG-WM uses a multi-LLM interaction framework, comprising a Watermark
+Generator, Shadow LLM & RAG, and Watermark Discriminator, to create watermark
+texts based on watermark entity-relationship tuples and inject them into the
+target RAG. We evaluate RAG-WM across three domain-specific and two
+privacy-sensitive tasks on four benchmark LLMs. Experimental results show that
+RAG-WM effectively detects the stolen RAGs in various deployed LLMs.
+Furthermore, RAG-WM is robust against paraphrasing, unrelated content removal,
+knowledge insertion, and knowledge expansion attacks. Lastly, RAG-WM can also
+evade watermark detection approaches, highlighting its promising application in
+detecting IP infringement of RAG systems.
+PDF Link: http://arxiv.org/pdf/2501.05249v1
+Extracted Content:
+RAG-WM: An Efficient Black-Box Watermarking Approach for
+Retrieval-Augmented Generation of Large Language Models
+Peizhuo Lv
+Institute of Information Engineering,
+Chinese Academy of Sciences
+China
+lvpeizhuo@gmail.comMengjie Sun
+Institute of Information Engineering,
+Chinese Academy of Sciences
+China
+sunmengjie@iie.ac.cnHao Wang
+School of Cyber Science and
+Technology, Shandong University
+China
+202437082@mail.sdu.edu.cn
+Xiaofeng Wang
+Indiana University Bloomington
+USA
+xw7@iu.eduShengzhi Zhang
+Department of Computer Science,
+Metropolitan College, Boston
+University
+USA
+shengzhi@bu.eduYuxuan Chen
+School of Cyber Science and
+Technology, Shandong University
+China
+chenyuxuan@sdu.edu.cn
+Kai Chen
+Institute of Information Engineering,
+Chinese Academy of Sciences
+China
+chenkai@iie.ac.cnLimin Sun
+Institute of Information Engineering,
+Chinese Academy of Sciences
+China
+sunlimin@iie.ac.cn
+Abstract
+In recent years, tremendous success has been witnessed in Retrieval-
+Augmented Generation (RAG), widely used to enhance Large Lan-
+guage Models (LLMs) in domain-specific, knowledge-intensive, and
+privacy-sensitive tasks. However, attackers may steal those valu-
+able RAGs and deploy or commercialize them, making it essential
+to detect Intellectual Property (IP) infringement. Most existing
+ownership protection solutions, such as watermarks, are designed
+for relational databases and texts. They cannot be directly applied
+to RAGs because relational database watermarks require white-
+box access to detect IP infringement, which is unrealistic for the
+knowledge base in RAGs. Meanwhile, post-processing by the ad-
+versary’s deployed LLMs typically destructs text watermark infor-
+mation. To address those problems, we propose a novel black-box
+“knowledge watermark” approach, named RAG-WM, to detect IP
+infringement of RAGs. RAG-WM uses a multi-LLM interaction
+framework, comprising a Watermark Generator, Shadow LLM &
+RAG, and Watermark Discriminator, to create watermark texts
+based on watermark entity-relationship tuples and inject them into
+the target RAG. We evaluate RAG-WM across three domain-specific
+and two privacy-sensitive tasks on four benchmark LLMs. Experi-
+mental results show that RAG-WM effectively detects the stolen
+RAGs in various deployed LLMs. Furthermore, RAG-WM is robust
+against paraphrasing, unrelated content removal, knowledge inser-
+tion, and knowledge expansion attacks. Lastly, RAG-WM can also
+evade watermark detection approaches, highlighting its promising
+application in detecting IP infringement of RAG systems.
+1 Introduction
+Large Language Models (LLMs), such as GPT [ 47] and Llama [ 43],
+have gained significant attention and are applied across diversefields, including healthcare [ 35,59], content generation [ 73], fi-
+nance [ 72], etc. However, they face considerable challenges, espe-
+cially with tasks that are domain-specific or knowledge-intensive.
+They are particularly prone to generating “hallucinations” [ 70]
+when responding to queries outside their training data. Addition-
+ally, many users are unwilling to upload their sensitive data to
+third-party platforms for LLM training due to data privacy con-
+cerns. To address these problems, Retrieval-Augmented Generation
+(RAG), consisting of a retriever model and a knowledge base, is
+proposed to improve LLMs by retrieving relevant information from
+the knowledge bases according to semantic similarity. For example,
+Microsoft has incorporated RAG into its Azure OpenAI service [ 45],
+and the Llama models developed by Meta support RAG integra-
+tion in certain applications [ 44]. Additionally, users can implement
+a team-specific RAG knowledge base on a preferred model (e.g.,
+Llama) using the AnythingLLM AI application [23].
+Building an RAG system, particularly its knowledge bases, re-
+quires significant investment in resources such as data collection,
+cleaning, organization, updates, and maintenance by skilled per-
+sonnel. For example, as noted in [ 48], CyC [ 36] costs about $120M;
+DBpedia [ 20] is developed at the cost of $5.1M; YAGO [ 64] costs
+$10M. Therefore, Intellectual Property (IP) protection of the RAG
+system is essential to protect the investment of the original RAG
+developers. Digital watermarking is a content-based, information-
+hiding technique for embedding/detecting digital information (usu-
+ally related to the owner’s identifier) into/from carrier data and
+has been demonstrated successful in relational databases [ 4,30,38],
+texts [ 31,46,50], DNN models [ 3], etc. However, those watermark-
+ing approaches cannot be directly used to protect the IP of RAG
+systems. On the one hand, when the owner utilizes the model water-
+marking approach like [ 3] to embed a watermark into the retriever
+model to protect the IP of the RAG system, attackers can easilyarXiv:2501.05249v1  [cs.CR]  9 Jan 2025
+bypass such IP protection by replacing the watermarked retriever
+with a clean retriever without any watermark embedded. On the
+other hand, applying the database watermarking approach like [ 30]
+to protect the IP of the knowledge base (the core component of
+RAG) requires direct access to the contents of the database for
+verification, i.e., the “white-box” access. However, owners often
+only have the “black-box” access to the suspicious RAG systems
+deployed by adversaries, allowing users to view outputs of LLM
+without direct access to the underlying knowledge base.
+Recently, WARD [ 29] was proposed to detect unauthorized usage
+of RAG using an LLM red-green list watermark to paraphrase all
+texts of RAGs. However, LLM red-green list watermarks are not
+robust against paraphrasing attacks [ 33,40,49,68]. Additionally,
+WARD is vulnerable to piracy attacks, where attackers paraphrase
+all texts in the stolen RAG using their own red-green list, thus
+fraudulently claiming ownership. More importantly, WARD did
+not consider or discuss the unique challenges posed by RAG for
+effective IP protection. To protect the IP of their RAGs, owners
+have to embed watermarks (e.g., format-based, syntactic-based,
+and red-green list-based) [ 14,31,42] into the knowledge database
+since embedding watermarks into retrievers can be easily bypassed.
+After stealing the RAG, attackers often deploy it with LLMs of
+their choice, making direct access to the outputs of the knowledge
+database impossible. Instead, the owners can only access the post-
+processed outputs by attackers’ LLMs, which might have destroyed
+the watermark embedded in the knowledge database.
+RAG-WM. To solve these challenges, we propose RAG-WM, a
+novel black-box watermarking method for RAG systems. It protects
+the IP of valuable RAGs and enables IP infringement detection.
+Specifically, our method embeds a “knowledge watermark” into
+the knowledge base, considering that knowledge can be success-
+fully retrieved and remain intact even after being processed by
+LLMs. To generate watermark texts, we first extract entities and
+relationships from the knowledge base, identify the high-frequency
+entities and relationships, and use them to generate tuples of wa-
+termark entities and corresponding relations. Since the watermark
+entities and relationships are derived from the original RAG, this
+effectively enhances the watermark’s stealthiness. This process
+involves a keyed hash function, with the secret key only known
+to the owner, thus enhancing the security of the watermark. We
+then employ a multi-LLM interaction watermarking technique that
+comprises a Watermark Generator, Shadow LLM&RAG, and Wa-
+termark Discriminator, to produce watermark texts based on these
+entity-relationship tuples. This framework significantly improves
+the quality of the watermark texts, ensuring that the watermark
+knowledge information remains intact and retrievable even after
+being processed by adversary-deployed LLMs. Finally, we propose a
+relevant-text concatenation technique to inject the watermark text
+into a position that facilitates easy retrieval, thus generating the
+watermarked RAG. Whenever IP infringement detection is needed,
+e.g., a suspicious LLM exhibits good performance in a domain where
+the owner’s RAG contains specialized knowledge, we query the
+suspicious LLM with the watermark question and apply a binomial
+test to the responses to detect IP infringement.
+We evaluate our watermark and demonstrate its effectiveness for
+RAG systems in three domain-specific tasks (NQ, HotpotQA, andMS-MARCO), two privacy-sensitive tasks (TREC-COVID and NF-
+Corpus), and across four benchmark LLMs: GPT-3.5-Turbo, PaLM 2,
+Llama-2-7B, and Vicuna-13B. First, RAG-WM effectively detects IP
+infringement of stolen RAGs across various LLM models, achiev-
+ing 100% verification success and demonstrating its effectiveness.
+Moreover, RAG-WM does not falsely detect IP infringement of inno-
+cent RAGs without the embedded watermark, demonstrating high
+integrity. Second, the main performance alignment between the wa-
+termarked RAG and the clean RAG is 97.87% on average, indicating
+good fidelity. Third, RAG-WM is robust against attacks that aim to
+destroy any embedded watermark, such as Paraphrasing, Unrelated
+Content Removal, Knowledge Insertion, and Knowledge Expan-
+sion Attacks. After these attacks, the watermarks still achieve 100%
+verification success. Fourth, RAG-WM is stealthy and not easily
+detectable by watermark detection methods (Detection by Perplex-
+ity and Duplicate Text Filtering), with detection success rates of
+13.05% and 0%, respectively. Finally, we conduct extensive evalua-
+tions using various parameters of RAG system and RAG-WM, and
+RAG-WM achieves 100% verification success.
+Contributions. We summarize our contributions as below:
+•We propose RAG-WM, a novel “knowledge watermark” method
+for RAG systems, which generates high-quality watermark texts
+by the proposed Multi-LLM Interaction technique, effectively pro-
+tecting the IP of RAGs. It ensures reliable watermark verification
+and causes minimal degradation in clean data performance.
+•We comprehensively evaluate the proposed approach on four
+different LLMs and five datasets, and the results demonstrate
+effective watermark performance and good main task perfor-
+mance preservation. We release our watermark implementation
+on GitHub [ 2], contributing to the RAG community to protect IP.
+2 Background and Related Work
+2.1 Retrieval-Augmented Generation (RAG)
+Naive RAGs. Retrieval-augmented generation (RAG) enhances
+large language models by integrating external knowledge databases,
+which improves accuracy and credibility in knowledge-intensive
+tasks like question-answering [ 7,53], medical applications [ 37],
+dialogue systems [ 60], etc. An RAG system comprises three com-
+ponents: a knowledge database, a retriever, and a large language
+model (LLM). The RAG process involves two main steps: relevant
+knowledge retrieval and answer generation.
+Relevant Knowledge Retrieval. When presented with a question
+𝑄, RAG retrieves the 𝑘text records most relevant to 𝑄from the
+knowledge database 𝐾𝐷. The retriever first encodes the question
+using the text encoder 𝑒to produce the embedding vector 𝑒(𝑄).
+It then applies a similarity metric 𝑠𝑖𝑚(e.g., Cosine Similarity, Eu-
+clidean Distance) to assess the similarity between 𝑒(𝑄)and each
+text record𝑒(𝑟𝑖)in𝐾𝐷, where𝑟𝑖∈𝐾𝐷. Finally, RAG selects 𝑘text
+records{𝑟1,...,𝑟𝑘}that are most relevant to question 𝑄as below:
+{𝑟1,𝑟2,...,𝑟𝑘}=top-𝑘(𝑠𝑖𝑚(𝑒(𝑄),𝑒(𝑟𝑖))),𝑟𝑖∈𝐾𝐷 (1)
+Answer Generation. Give the question 𝑄, the𝑘most relevant
+text records{𝑟1,...,𝑟𝑘}, and an LLM 𝐿𝐿𝑀(), the output answer is
+obtained by inputting the question and texts into the LLM:
+𝑎𝑛𝑠𝑤𝑒𝑟 =𝐿𝐿𝑀(𝑄,{𝑟1,...,𝑟𝑘}) (2)
+2
+================================================================================
+Title: MultiHop-RAG: Benchmarking Retrieval-Augmented Generation for Multi-Hop Queries
+Authors: Yixuan Tang, Yi Yang
+Summary: Retrieval-augmented generation (RAG) augments large language models (LLM) by
+retrieving relevant knowledge, showing promising potential in mitigating LLM
+hallucinations and enhancing response quality, thereby facilitating the great
+adoption of LLMs in practice. However, we find that existing RAG systems are
+inadequate in answering multi-hop queries, which require retrieving and
+reasoning over multiple pieces of supporting evidence. Furthermore, to our
+knowledge, no existing RAG benchmarking dataset focuses on multi-hop queries.
+In this paper, we develop a novel dataset, MultiHop-RAG, which consists of a
+knowledge base, a large collection of multi-hop queries, their ground-truth
+answers, and the associated supporting evidence. We detail the procedure of
+building the dataset, utilizing an English news article dataset as the
+underlying RAG knowledge base. We demonstrate the benchmarking utility of
+MultiHop-RAG in two experiments. The first experiment compares different
+embedding models for retrieving evidence for multi-hop queries. In the second
+experiment, we examine the capabilities of various state-of-the-art LLMs,
+including GPT-4, PaLM, and Llama2-70B, in reasoning and answering multi-hop
+queries given the evidence. Both experiments reveal that existing RAG methods
+perform unsatisfactorily in retrieving and answering multi-hop queries. We hope
+MultiHop-RAG will be a valuable resource for the community in developing
+effective RAG systems, thereby facilitating greater adoption of LLMs in
+practice. The MultiHop-RAG and implemented RAG system is publicly available at
+https://github.com/yixuantt/MultiHop-RAG/.
+PDF Link: http://arxiv.org/pdf/2401.15391v1
+Extracted Content:
+MultiHop-RAG: Benchmarking Retrieval-Augmented Generation for
+Multi-Hop Queries
+Yixuan Tang andYi Yang
+Hong Kong University of Science and Technology
+{yixuantang,imyiyang}@ust.hk
+Abstract
+Retrieval-augmented generation (RAG) aug-
+ments large language models (LLM) by re-
+trieving relevant knowledge, showing promis-
+ing potential in mitigating LLM hallucinations
+and enhancing response quality, thereby facil-
+itating the great adoption of LLMs in prac-
+tice. However, we find that existing RAG sys-
+tems are inadequate in answering multi-hop
+queries, which require retrieving and reasoning
+over multiple pieces of supporting evidence.
+Furthermore, to our knowledge, no existing
+RAG benchmarking dataset focuses on multi-
+hop queries. In this paper, we develop a novel
+dataset, MultiHop-RAG , which consists of a
+knowledge base, a large collection of multi-
+hop queries, their ground-truth answers, and
+the associated supporting evidence. We detail
+the procedure of building the dataset, utiliz-
+ing an English news article dataset as the un-
+derlying RAG knowledge base. We demon-
+strate the benchmarking utility of MultiHop-
+RAG in two experiments. The first experiment
+compares different embedding models for re-
+trieving evidence for multi-hop queries. In the
+second experiment, we examine the capabili-
+ties of various state-of-the-art LLMs, includ-
+ing GPT-4, PaLM, and Llama2-70B, in rea-
+soning and answering multi-hop queries given
+the evidence. Both experiments reveal that ex-
+isting RAG methods perform unsatisfactorily
+in retrieving and answering multi-hop queries.
+We hope MultiHop-RAG will be a valuable re-
+source for the community in developing effec-
+tive RAG systems, thereby facilitating greater
+adoption of LLMs in practice. The MultiHop-
+RAG and implemented RAG system is publicly
+available at https://github.com/yixuantt/
+MultiHop-RAG/ .
+1 Introduction
+The emergence of large language models (LLMs),
+such as ChatGPT, has fostered a wide range of inno-
+vations, powering intelligent chatbots and other nat-
+ural language processing (NLP) applications (Ope-
+Figure 1: RAG with multi-hop query.
+nAI, 2023). One promising use case is Retrieval-
+Augmented Generation (RAG) (Asai et al., 2023),
+which optimizes the output of a large language
+model by referencing an external knowledge base
+outside of the LLM training data sources before
+generating a response. RAG improves LLM’s re-
+sponse (Borgeaud et al., 2022) and also mitigates
+the occurrence of hallucinations, thereby enhancing
+the models’ credibility (Gao et al., 2023). LLM-
+based frameworks, such as LlamaIndex (Liu, 2022)
+and LangChain (Chase, 2022), specialize in sup-
+porting RAG pipelines.
+In real-world Retrieval-Augmented Generation
+(RAG) applications, a user’s query often necessi-
+tates retrieving and reasoning over evidence from
+multiple documents, a process known as multi-hop
+query . For instance, consider financial analysis us-
+ing a database of financial reports. A financial ana-
+lyst might query, Which company among Google,
+Apple, and Nvidia reported the largest profit mar-
+gins in their third-quarter reports for 2023? or
+inquire about a specific company’s performance
+over time, such as How does Apple’s sales trend
+look over the past three years? These queries re-
+quire evidence from multiple documents to formu-
+late an answer. Due to the multifaceted nature of
+such queries, involving information from various
+sources, traditional similarity matching methods
+like cosine similarity between query and financialarXiv:2401.15391v1  [cs.CL]  27 Jan 2024
+News source Fortune Magazine The Sydney Morning Herald
+Evidence Back then, just like today, home prices had boomed
+for years before Fed officials were ultimately forced
+to hike interest rates aggressively in an attempt to
+fight inflation.Postponements of such reports could complicate
+things for the Fed, which has insisted it will make
+upcoming decisions on interest rates based on what
+incoming data say about the economy.
+Claim Federal Reserve officials were forced to aggressively
+hike interest rates to combat inflation after years of
+booming home prices.The Federal Reserve has insisted that it will base its
+upcoming decisions on interest rates on the incoming
+economic data.
+Bridge-Topic Interest rate hikes to combat inflation Interest rate decisions based on economic data
+Bridge-Entity Federal Reserve Federal Reserve
+Query Does the article from Fortune suggest that the Federal Reserve’s interest rate hikes are a response to past
+conditions, such as booming home prices, while The Sydney Morning Herald article indicates that the
+Federal Reserve’s future interest rate decisions will be based on incoming economic data?
+Answer Yes
+Table 1: An example of a multi-hop query, including supporting evidence from two news articles, the paraphrased
+claim, the bridge-topic and bridge-entity, and the corresponding answer.
+report chunk embeddings might not yield optimal
+results. We demonstrate this multi-hop retrieval
+process in Figure 1.
+However, existing RAG benchmarks, such as
+RGB (Chen et al., 2023) and RECALL (Liu et al.,
+2023), mainly evaluate a simple case where the an-
+swer of a query can be retrieved and solved using
+one single piece of evidence. None of these bench-
+marks assess the retrieval and reasoning capability
+of LLMs for complex multi-hop queries. To ad-
+dress this gap and make RAG benchmarking more
+closely resemble real-world scenarios, in this paper,
+we introduce MultiHop-RAG . To our knowledge,
+MultiHop-RAG is one of the first RAG datasets
+focusing specifically on multi-hop queries.
+Based on the RAG queries commonly encoun-
+tered in real-world scenarios, we first categorize
+multi-hop queries into four types: Inference query ,
+Comparison query ,Temporal query , and Null
+query . The first three types — Inference, Com-
+parison, and Temporal — require the retrieval and
+analysis of evidence from multiple sources, encom-
+passing tasks like inferring relationships, compar-
+ing data points, and sequencing events over time.
+The Null query represents a scenario where the
+query cannot be derived from the knowledge base.
+This category is crucial for assessing whether an
+LLM might hallucinate an answer to a multi-hop
+query when the retrieved text lacks relevance.
+We construct our RAG knowledge base using a
+collection of news articles. Using GPT-4 as a data
+generator, we then take an extensive procedure to
+construct a diverse set of multi-hop queries, each
+requiring the retrieval and reasoning over multiple
+documents. An example of query construction is
+shown in Table 1. First, we begin by extractingfactual sentences from each news article as evi-
+dence. For example, an extracted piece of evidence
+from an article may state: “Back then, just like
+today, home prices had boomed for years before
+Fed officials were ultimately forced to hike interest
+rates aggressively in an attempt to fight inflation.”
+Second, we input each evidence piece into GPT-4,
+prompting it to rephrase the evidence into a claim.
+This claim is clarified with a disambiguated topic
+and entity. For instance, GPT-4 might rephrase the
+aforementioned evidence into: “Federal Reserve
+officials were forced to aggressively hike interest
+rates to combat inflation after years of booming
+home prices”, identifying “Interest rate hikes to
+combat inflation” as the topic and “Federal Re-
+serve” as the entity. These topics and entities act as
+bridges for constructing multi-hop queries, known
+as bridge-topic or bridge-entity. Next, we use GPT-
+4 to generate specific multi-hop queries related to
+the same bridge-topic or bridge-entity, accompa-
+nied by the correct answers. Lastly, we undertake
+a validation step to ensure the data quality.
+We demonstrate the benchmarking capabilities
+of MultiHop-RAG using two experiments, utilizing
+a RAG system implemented with LlamaIndex (Liu,
+2022). The first experiment involves a comparison
+of different embedding models for retrieving rele-
+vant evidence for multi-hop queries. In the second
+experiment, we assess the reasoning and answering
+abilities of various state-of-the-art LLMs, including
+GPT-4, GPT-3.5, PaLM, Claude-2, Llama2-70B,
+and Mixtral-8x7B, for multi-hop queries when re-
+trieved text is provided. The results from both ex-
+periments indicate that the current RAG implemen-
+tations are inadequate for effectively retrieving and
+answering multi-hop queries. We publicly release
+================================================================================
+Title: Astute RAG: Overcoming Imperfect Retrieval Augmentation and Knowledge Conflicts for Large Language Models
+Authors: Fei Wang, Xingchen Wan, Ruoxi Sun, Jiefeng Chen, Sercan Ö. Arık
+Summary: Retrieval-Augmented Generation (RAG), while effective in integrating external
+knowledge to address the limitations of large language models (LLMs), can be
+undermined by imperfect retrieval, which may introduce irrelevant, misleading,
+or even malicious information. Despite its importance, previous studies have
+rarely explored the behavior of RAG through joint analysis on how errors from
+imperfect retrieval attribute and propagate, and how potential conflicts arise
+between the LLMs' internal knowledge and external sources. We find that
+imperfect retrieval augmentation might be inevitable and quite harmful, through
+controlled analysis under realistic conditions. We identify the knowledge
+conflicts between LLM-internal and external knowledge from retrieval as a
+bottleneck to overcome in the post-retrieval stage of RAG. To render LLMs
+resilient to imperfect retrieval, we propose Astute RAG, a novel RAG approach
+that adaptively elicits essential information from LLMs' internal knowledge,
+iteratively consolidates internal and external knowledge with source-awareness,
+and finalizes the answer according to information reliability. Our experiments
+using Gemini and Claude demonstrate that Astute RAG significantly outperforms
+previous robustness-enhanced RAG methods. Notably, Astute RAG is the only
+approach that matches or exceeds the performance of LLMs without RAG under
+worst-case scenarios. Further analysis reveals that Astute RAG effectively
+resolves knowledge conflicts, improving the reliability and trustworthiness of
+RAG systems.
+PDF Link: http://arxiv.org/pdf/2410.07176v1
+Extracted Content:
+Astute RAG : Overcoming Imperfect
+Retrieval Augmentation and Knowledge
+Conflicts for Large Language Models
+Fei Wang1 2 *, Xingchen Wan1, Ruoxi Sun1, Jiefeng Chen1and Sercan Ö. Arık1
+1Google Cloud AI Research,2University of Southern California
+Retrieval-Augmented Generation (RAG), while effective in integrating external knowledge to address
+the limitations of large language models (LLMs), can be undermined by imperfect retrieval, which may
+introduce irrelevant, misleading, or even malicious information. Despite its importance, previous studies
+have rarely explored the behavior of RAG through joint analysis on how errors from imperfect retrieval
+attribute and propagate, and how potential conflicts arise between the LLMs’ internal knowledge and
+external sources. We find that imperfect retrieval augmentation might be inevitable and quite harmful,
+through controlled analysis under realistic conditions. We identify the knowledge conflicts between LLM-
+internal and external knowledge from retrieval as a bottleneck to overcome in the post-retrieval stage of
+RAG. To render LLMs resilient to imperfect retrieval, we propose Astute RAG , a novel RAG approach
+thatadaptively elicits essential information from LLMs’ internal knowledge, iteratively consolidates
+internalandexternalknowledgewith source-awareness ,andfinalizestheansweraccordingtoinformation
+reliability. Our experiments using Gemini and Claude demonstrate that Astute RAG significantly
+outperforms previous robustness-enhanced RAG methods. Notably, Astute RAG is the only approach
+that matches or exceeds the performance of LLMs without RAG under worst-case scenarios. Further
+analysis reveals that Astute RAG effectively resolves knowledge conflicts, improving the reliability
+and trustworthiness of RAG systems.
+1. Introduction
+Retrieval augmented generation (RAG) has become the standard approach for large language models
+(LLMs) to tackle knowledge-intensive tasks (Guu et al., 2020; Lewis et al., 2020). Prior works mainly
+leverage RAG to address the inherent knowledge limitations of LLMs, effectively integrating missing
+information and grounding to reliable sources. However, recent research has highlighted a significant
+drawback that RAG might rely on imperfect retrieval results, including irrelevant, misleading, or even
+malicious information, which eventually leads to inaccurate LLM responses (Chen et al., 2024a; Xiang
+et al., 2024; Zou et al., 2024). For example, when asked about the practice of eating rocks, LLMs
+might cite misleading information, such as a satirical news source claiming that one should consume
+at least one rock per day.1The occurrence of imperfect retrieval augmentation is inevitable, driven by
+factors such as corpus quality limitations (Shao et al., 2024), the reliability of retrievers (Dai et al.,
+2024), and the complexity of the queries (Su et al., 2024). This poses a significant challenge to the
+trustworthiness of RAG.
+While there have been independent analyses of information retrieval and RAG in the context of
+LLMs (Mallen et al., 2023; Su et al., 2024), previous studies have rarely connected the behaviors of
+retrieval and subsequent generation, particularly regarding the propagation of information retrieval
+errors,whichmayleadto knowledgeconflicts (Longpreetal.,2021;Wangetal.,2023a;Xuetal.,2024b)
+between LLMs and context. To this end, we conduct comprehensive analyses on the occurrence of
+1https://www.bbc.com/news/articles/cd11gzejgz4o .
+Corresponding author(s): fwang598@usc.edu, soarik@google.com
+* This work was done while Fei was a research intern at Google Cloud AI Research.arXiv:2410.07176v1  [cs.CL]  9 Oct 2024
+Astute RAG : Overcoming Imperfect Retrieval Augmentation and Knowledge Conflicts for Large Language Models
+Figure 1|Knowledge conflicts between the LLMs’ internal knowledge and retrieved knowledge from
+external sources. We report the overall results with Claude under the setting in Section 4.1.
+imperfectretrievalaugmentationanditsimpactonLLMbehaviorunderrealisticconditions(Section2).
+We conduct controlled experiments on a diverse range of general, domain-specific, and long-tail
+questions from NQ (Kwiatkowski et al., 2019), TriviaQA (Joshi et al., 2017), BioASQ (Tsatsaronis
+et al., 2015), and PopQA (Mallen et al., 2023). We observe that imperfect retrieval augmentation is
+widespread even with adept real-world search engine (such as Google Search with Web as corpus)
+– roughly 70% retrieved passages do not directly contain true answers, leading to the impeded
+performance of LLM with RAG augmentation.2
+These findings underscore the potential severity of the imperfect retrieval issue in real-world
+RAG and highlight the widespread existence of knowledge conflicts as the bottleneck to overcome
+it (Figure 1). Recent studies demonstrate that LLM-internal and external knowledge offer distinct
+advantages, but LLMs often struggle to consolidate conflicting information reliably, failing to respond
+based on collective knowledge (Jin et al., 2024; Mallen et al., 2023; Tan et al., 2024; Xie et al., 2024).
+This raises the following research question: Is there an effective method to combine internal (from LLMs’
+pretrained weights) and external (from specific corpora or knowledge bases) knowledge for more reliable
+RAG?Previous work has widely explored using external knowledge to enhance LLMs through RAG.
+We seek to further leverage LLMs’ internal knowledge to recover from RAG failures
+Motivated by these important real-world challenges, we propose Astute RAG (Section 3), a
+novel RAG approach designed to be resilient to imperfect retrieval augmentation, while preserving
+RAG grounding effect when RAG is reliable. To this end, Astute RAG needs effectively differentiate
+the reliability of the LLM’s intrinsic knowledge and the external information retrieved in RAG, utilizing
+each only when trustworthy and ensuring proper integration. Specifically, Astute RAG initially
+elicits information from LLMs’ internal knowledge to explicitly complement the passages retrieved
+from external sources. Then, Astute RAG conducts source-aware knowledge consolidation of
+information from various internal and external sources. The desiderata is combining consistent
+information, identifying conflicting information, and filtering out irrelevant information. Finally,
+Astute RAG proposes answers based on each group of consistent passages and compares the an-
+swers from different passage groups to determine the final answer. Our experiments involving Gemini
+and Claude3on various datasets (Section 4) demonstrate the superior performance of Astute RAG
+compared to previous RAG approaches designed to be robust against retrieval corruptions. Moreover,
+Astute RAG consistently outperforms baselines across different retrieval quality levels. Notably,
+2Note that some passages may contain information indirectly relevant to the answer, but may unintentionally mislead or
+distract LLMs.
+3https://www.anthropic.com/claude
+2
+================================================================================

@@ -2,47 +2,56 @@
 import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { SendHorizontal } from "lucide-react";
+import { SendHorizontal, Loader } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-import Response from "./response"; // Import the new component
+import Response from "./response";
+import axios from "axios";
 
 interface Message {
   text: string;
   sender: "user" | "ai";
 }
 
-const markdownResponse = `
-The sky appears blue to us because of a phenomenon called Rayleigh scattering, named after the British physicist Lord Rayleigh. He discovered that when sunlight enters Earth's atmosphere, it encounters tiny molecules of gases such as nitrogen and oxygen.
-
-These gas molecules scatter the light in all directions, but they scatter shorter (blue) wavelengths more than longer (red) wavelengths. This is because blue light has a smaller wavelength and is therefore bent by the gas molecules less than red light.
-
-As a result, when sunlight enters the atmosphere, it is scattered in every direction, with the blue light being distributed throughout the sky. Our eyes perceive this scattered blue light as the color of the sky.
-
-In addition to Rayleigh scattering, other factors can also contribute to the appearance of the sky as blue, such as:
-
-- **Dust and pollen particles**: These particles can scatter light and give the sky a more yellowish or brownish hue.
-
-- Water vapor: Water molecules in the air can absorb and scatter light, which can also contribute to a bluer color.
-
-- Clouds: The presence of clouds can scatter light and make the sky appear whiter or grayer.
-
-However, it's worth noting that the sky does not actually appear blue all the time. During sunrise and sunset, the sky can take on hues of red, orange, and pink due to the scattering of light by atmospheric particles.
-  `;
-
 export default function Messenger() {
   const [value, setValue] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
-  const messagesEndRef = useRef<HTMLDivElement>(null); // Add ref
+  const [loading, setLoading] = useState(false); // Loading state for API calls
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const sendHandler = () => {
+  const sendHandler = async () => {
     if (!value.trim()) {
       alert("Enter something");
       return;
     }
+
     // Add user message
-    setMessages([...messages, { text: value, sender: "user" }]);
-    // TODO: Add AI response here
-    setValue("");
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      { text: value, sender: "user" },
+    ]);
+
+    setValue(""); // Clear input
+    setLoading(true); // Start loading
+
+    try {
+      const response = await axios.post(
+        "http://127.0.0.1:8000/prepare-paper",
+        {
+          query: value, // Fixed API payload
+        },
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        { text: response.data.response, sender: "ai" },
+      ]);
+    } catch (error) {
+      console.error("Error fetching response:", error);
+      alert("Failed to get a response from the server.");
+    } finally {
+      setLoading(false); // Stop loading
+    }
   };
 
   useEffect(() => {
@@ -56,7 +65,7 @@ export default function Messenger() {
           message.sender === "user" ? (
             <div key={index} className="flex justify-end">
               <Alert
-                variant={"default"}
+                variant="default"
                 className="max-w-80 p-2 m-8 rounded-2xl bg-blue-200"
               >
                 <AlertTitle className="text-xs text-slate-600">You</AlertTitle>
@@ -66,7 +75,7 @@ export default function Messenger() {
               </Alert>
             </div>
           ) : (
-            <Response key={index} markdown={markdownResponse} />
+            <Response key={index} markdown={message.text} />
           )
         )}
         <div ref={messagesEndRef} />
@@ -82,10 +91,11 @@ export default function Messenger() {
         <Button
           type="submit"
           className="h-12 w-12 rounded-full"
-          variant={"outline"}
+          variant="outline"
           onClick={sendHandler}
+          disabled={loading} // Disable button while loading
         >
-          <SendHorizontal />
+          {loading ? <Loader /> : <SendHorizontal />}
         </Button>
       </div>
     </div>
