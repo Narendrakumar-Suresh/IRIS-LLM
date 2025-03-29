@@ -12,21 +12,25 @@ interface Message {
 }
 
 const markdownResponse = `
-The sky appears blue to us because of a phenomenon called Rayleigh scattering, named after the British physicist Lord Rayleigh. He discovered that when sunlight enters Earth's atmosphere, it encounters tiny molecules of gases such as nitrogen and oxygen.
+**Astute RAG: A Novel Method to Combine Internal and External Knowledge for More Reliable Retrieval Augmentation**
 
-These gas molecules scatter the light in all directions, but they scatter shorter (blue) wavelengths more than longer (red) wavelengths. This is because blue light has a smaller wavelength and is therefore bent by the gas molecules less than red light.
+**Abstract**
+Retrieval Augmentation Gaps (RAG) is a crucial step in Natural Language Processing (NLP) tasks that can compromise the quality of retrieved passages. This study proposes Astute RAG, a novel method designed to improve reliability while preserving the grounding effect when retrieval augmentation is successful. Astute RAG aims to leverage external knowledge to enhance LLMs through RAG, we need an effective approach to differentiate between internal and external knowledge, utilizing each only when trustworthy, ensuring proper integration. Our proposed method addresses this challenge by eliciting information from LLMs’ intrinsic knowledge and then consolidating it with external information retrieved during augmentation.
 
-As a result, when sunlight enters the atmosphere, it is scattered in every direction, with the blue light being distributed throughout the sky. Our eyes perceive this scattered blue light as the color of the sky.
+**Introduction**
+The retrieval augmentation gap (RAG) is a common issue in NLP tasks like Question Answering (QAs we obtain passages through various sources, our knowledge, research has explored the use of external knowledge to augment RAG, but LLMs’ inherent abilities and reliability. We investigate whether Astute RAG effectively addresses issues plaguing previous approaches by addressing these questions.
 
-In addition to Rayleigh scattering, other factors can also contribute to the appearance of the sky as blue, such as:
+**Main Body**
 
-- **Dust and pollen particles**: These particles can scatter light and give the sky a more yellowish or brownish hue.
+### Methodology
 
-- Water vapor: Water molecules in the air can absorb and scatter light, which can also contribute to a bluer color.
+*   **Initial Elicitation**: we initially elicit information from LLMs’ internal knowledge using pre-trained weights.
+*    **Knowledge Consolidation**: Then, we consolidate the obtained information with external sources
+*   **Comparison**: Astute RAG selects appropriate answer for each group of consistent and conflicting or irrelevant passages, respectively. We conduct comparisons between answers to determine final correct answers.
 
-- Clouds: The presence of clouds can scatter light and make the sky appear whiter or grayer.
+### Experimental Design
 
-However, it's worth noting that the sky does not actually appear blue all the time. During sunrise and sunset, the sky can take on hues of red, orange, and pink due to the scattering of light by atmospheric particles.
+We conducted experiments using Gemini and Claude3on three datasets (Section 4). These datasets comprise texts from Wikipedia articles, the latter being a common task in large language model training data on which we collected our dataset for both passage groups of LLMs. We also collected external knowledge databases related to these datasets. We then evaluate Astute RAG performance using evaluation metrics and reported in Section 3.
   `;
 
 export default function Messenger() {
@@ -40,7 +44,7 @@ export default function Messenger() {
       return;
     }
     // Add user message
-    setMessages([...messages, { text: value, sender: "user" }]);
+    setMessages([...messages, { text: value, sender: "ai" }]);
     // TODO: Add AI response here
     setValue("");
   };
