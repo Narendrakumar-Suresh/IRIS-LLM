@@ -1,3 +1,196 @@
+Title: In Defense of RAG in the Era of Long-Context Language Models
+Authors: Tan Yu, Anbang Xu, Rama Akkiraju
+Summary: Overcoming the limited context limitations in early-generation LLMs,
+retrieval-augmented generation (RAG) has been a reliable solution for
+context-based answer generation in the past. Recently, the emergence of
+long-context LLMs allows the models to incorporate much longer text sequences,
+making RAG less attractive. Recent studies show that long-context LLMs
+significantly outperform RAG in long-context applications. Unlike the existing
+works favoring the long-context LLM over RAG, we argue that the extremely long
+context in LLMs suffers from a diminished focus on relevant information and
+leads to potential degradation in answer quality. This paper revisits the RAG
+in long-context answer generation. We propose an order-preserve
+retrieval-augmented generation (OP-RAG) mechanism, which significantly improves
+the performance of RAG for long-context question-answer applications. With
+OP-RAG, as the number of retrieved chunks increases, the answer quality
+initially rises, and then declines, forming an inverted U-shaped curve. There
+exist sweet points where OP-RAG could achieve higher answer quality with much
+less tokens than long-context LLM taking the whole context as input. Extensive
+experiments on public benchmark demonstrate the superiority of our OP-RAG.
+PDF Link: http://arxiv.org/pdf/2409.01666v1
+Extracted Content:
+In Defense of RAG in the Era of Long-Context Language Models
+Tan Yu
+NVIDIA
+Santa Clara, California
+United States
+tayu@nvidia.comAnbang Xu
+NVIDIA
+Santa Clara, California
+United States
+anbangx@nvidia.comRama Akkiraju
+NVIDIA
+Santa Clara, California
+United States
+rakkiraju@nvidia.com
+Abstract
+Overcoming the limited context limitations in
+early-generation LLMs, retrieval-augmented
+generation (RAG) has been a reliable solution
+for context-based answer generation in the past.
+Recently, the emergence of long-context LLMs
+allows the models to incorporate much longer
+text sequences, making RAG less attractive.
+Recent studies show that long-context LLMs
+significantly outperform RAG in long-context
+applications. Unlike the existing works favor-
+ing the long-context LLM over RAG, we ar-
+gue that the extremely long context in LLMs
+suffers from a diminished focus on relevant in-
+formation and leads to potential degradation in
+answer quality. This paper revisits the RAG in
+long-context answer generation. We propose
+an order-preserve retrieval-augmented genera-
+tion (OP-RAG) mechanism, which significantly
+improves the performance of RAG for long-
+context question-answer applications. With
+OP-RAG, as the number of retrieved chunks
+increases, the answer quality initially rises, and
+then declines, forming an inverted U-shaped
+curve. There exist sweet points where OP-RAG
+could achieve higher answer quality with much
+less tokens than long-context LLM taking the
+whole context as input. Extensive experiments
+on public benchmark demonstrate the superior-
+ity of our OP-RAG.
+1 Introduction
+Due to the limited context window length
+(eg, 4096) of early-generation large language
+models (LLMs), retrieval augmented generation
+(RAG) (Guu et al., 2020; Lewis et al., 2020) is an
+indispensable choice to handle a large-scale context
+corpus. Since the answer quality is heavily depen-
+dent on the performance of the retrieval model, a
+lot of efforts are devoted to improving the retrieval
+recall/precision when designing the RAG system.
+Recently, the state-of-art LLMs support much
+longer context windows. For example, GPT-
+4O (OpenAI, 2023), Claudi-3.5 (Anthropic, 2024),
+(a) F1 score.
+(b) Input token count.
+Figure 1: Comparisons between the proposed order-
+preserve retrieval-augmented generation (OP-RAG) and
+approaches using long-context LLMs without RAG
+on En.QA dataset of ∞Bench. Our OP-RAG uses
+Llama3.1-70B as generator, which significantly outper-
+forms its counterpart using Llama3.1-70B without RAG.
+Llama3.1 (Meta, 2024b), Phi-3 (Abdin et al., 2024),
+and Mistral-Large2 (AI, 2024) all support 128-K
+context. Gemini-1.5-pro even supports a 1M con-
+text window. The recent emergence of long-context
+LLMs naturally leads to the question: is RAG nec-
+essary in the age of long-context LLMs? Li et al.
+(2024) recently systematically compares RAG with
+long-context (LC) LLMs (w/o RAG) and demon-
+strates that LC LLMs consistently outperform RAG
+in terms of answer quality.
+In this work, we re-examine the effectiveness
+of RAG in long-context answer generation. We
+observe that the order of retrieved chunks in thearXiv:2409.01666v1  [cs.CL]  3 Sep 2024
+context of LLM is vital for the answer quality. Dif-
+ferent from traditional RAG which places the re-
+trieved chunks in a relevance-descending order, we
+propose to preserve the order of retrieved chunks
+in the original text. Our experiments show that the
+proposed order-preserving mechanism significantly
+improves the answer quality of RAG.
+Meanwhile, using the proposed order-preserve
+RAG, as the number of retrieved chunks increases,
+the answer quality initially rises and then declines.
+This is because, with more retrieved chunks, the
+model has access to more potentially relevant in-
+formation, which improves the chances of retriev-
+ing the correct context needed to generate a high-
+quality answer. However, as more chunks are re-
+trieved, the likelihood of introducing irrelevant or
+distracting information also increases. This excess
+information can confuse the model, leading to a
+decline in answer quality. The trade-off, therefore,
+is between improving recall by retrieving more
+context and maintaining precision by limiting dis-
+tractions. The optimal point is where the balance
+between relevant and irrelevant information maxi-
+mizes the quality of the answer. Beyond this point,
+the introduction of too much irrelevant information
+degrades the model’s performance. It explains the
+inferior performance of the approach taking the
+whole long context as the input of LLM.
+Different from the conclusion from Li et al.
+(2024), with the proposed order-preserving mech-
+anism, RAG achieves higher answer quality com-
+pared with its counterparts that rely solely on Long-
+Context LLMs. As shown in Figure 4a, On En.QA
+dataset of ∞Bench (Zhang et al., 2024), using only
+16K retrieved tokens, we achieve 44.43F1 score
+with Llama3.1-70B. In contrast, without RAG,
+Llama3.1-70B making full use of 128K context
+only achieves 34.32F1 score, GPT-4O achieves
+only 32.36F1 score and Gemini-1.5-Pro obtains
+only43.08F1 score as evaluated by Li et al. (2024).
+That is, RAG could achieve a higher F1 score even
+with a significant reduction on input length.
+2 Related Work
+Retrieval-augmented generation. By incorporat-
+ing the external knowledge as context, retrieval-
+augmented generation (RAG) (Guu et al., 2020;
+Lewis et al., 2020; Mialon et al., 2023) allows lan-
+guage model to access up-to-date and specific in-
+formation, reducing hallucinations and improving
+factual accuracy. Before the era of long-context
+Figure 2: Vanilla RAG versus the proposed order-
+preserve the RAG. As shown in the example, a long
+document is cropped into 13chunks, {ci}13
+i=1. The sim-
+ilarity score is appended to each chunk. We retrieve
+top 4 chunks with the highest similarity scores. Vanilla
+RAG places the chunks in a score-descending order,
+whereas the proposed order-preserve RAG places the
+chunks based on the order in the original document.
+LLMs, RAG is a promising solution to overcoming
+the limitation of short context window.
+Long-context LLM. To support the long sequence
+of language models, many efforts have been de-
+voted to improving the computing efficiency of
+self-attention (Choromanski et al., 2020; Zaheer
+et al., 2020; Tay et al., 2020; Dao et al., 2022; Dao,
+2024) and boosting extensibility of positional en-
+coding (Press et al., 2021; Sun et al., 2022; Chen
+et al., 2023). Recently, the flagship LLMs such as
+GPT-4O (OpenAI, 2023), Gemini-1.5-Pro (Reid
+et al., 2024), Claudi-3.5 (Anthropic, 2024), Grok-
+2 (xAI, 2024), and Llama3.1 (Meta, 2024a) have
+supported extremely large context. With the ex-
+istence of long-context LLMs, RAG is no longer
+a indispensable module for long-context question-
+answering task. Recently, Li et al. (2024) con-
+cludes that using long-context without RAG could
+significantly outperforms RAG. Different from the
+conclusion from (Li et al., 2024), in this work,
+we demonstrate the proposed order-preserve RAG
+could beat the long-context LLMs without RAG.
+3 Order-Preserve RAG
+Let us denote the long textual context, e.g., a long
+document, by d. We split dintoNchunks sequen-
+tially and uniformly, {ci}N
+i=1. The index iimplies
+the sequential order of the chunk ciind. That is,
+ci−1denotes the chunk before ciwhereas ci+1de-
+notes the chunk right after ci. Given a query q, we
+obtain the relevance score of the chunk ciby com-
+puting cosine similarity between the embedding of
+qand that of ci:
+si= cos(emb( q),emb(ci)), (1)
+================================================================================
 Title: Modular RAG: Transforming RAG Systems into LEGO-like Reconfigurable Frameworks
 Authors: Yunfan Gao, Yun Xiong, Meng Wang, Haofen Wang
 Summary: Retrieval-augmented Generation (RAG) has markedly enhanced the capabilities
@@ -582,202 +775,6 @@ trieved text is provided. The results from both ex-
 periments indicate that the current RAG implemen-
 tations are inadequate for effectively retrieving and
 answering multi-hop queries. We publicly release
-================================================================================
-Title: RAG Foundry: A Framework for Enhancing LLMs for Retrieval Augmented Generation
-Authors: Daniel Fleischer, Moshe Berchansky, Moshe Wasserblat, Peter Izsak
-Summary: Implementing Retrieval-Augmented Generation (RAG) systems is inherently
-complex, requiring deep understanding of data, use cases, and intricate design
-decisions. Additionally, evaluating these systems presents significant
-challenges, necessitating assessment of both retrieval accuracy and generative
-quality through a multi-faceted approach. We introduce RAG Foundry, an
-open-source framework for augmenting large language models for RAG use cases.
-RAG Foundry integrates data creation, training, inference and evaluation into a
-single workflow, facilitating the creation of data-augmented datasets for
-training and evaluating large language models in RAG settings. This integration
-enables rapid prototyping and experimentation with various RAG techniques,
-allowing users to easily generate datasets and train RAG models using internal
-or specialized knowledge sources. We demonstrate the framework effectiveness by
-augmenting and fine-tuning Llama-3 and Phi-3 models with diverse RAG
-configurations, showcasing consistent improvements across three
-knowledge-intensive datasets. Code is released as open-source in
-https://github.com/IntelLabs/RAGFoundry.
-PDF Link: http://arxiv.org/pdf/2408.02545v1
-Extracted Content:
-RAG Foundry: A Framework for Enhancing LLMs for Retrieval
-Augmented Generation
-Daniel Fleischer Moshe Berchansky Moshe Wasserblat Peter Izsak
-Intel Labs
-{daniel.fleischer, moshe.berchansky, moshe.wasserblat, peter.izsak}@intel.com
-Abstract
-Implementing Retrieval-Augmented Genera-
-tion (RAG) systems is inherently complex,
-requiring deep understanding of data, use
-cases, and intricate design decisions. Addi-
-tionally, evaluating these systems presents sig-
-nificant challenges, necessitating assessment of
-both retrieval accuracy and generative quality
-through a multi-faceted approach. We intro-
-duce RAG F OUNDRY , an open-source frame-
-work for augmenting large language models
-for RAG use cases. RAG F OUNDRY inte-
-grates data creation, training, inference and
-evaluation into a single workflow, facilitating
-the creation of data-augmented datasets for
-training and evaluating large language mod-
-els in RAG settings. This integration en-
-ables rapid prototyping and experimentation
-with various RAG techniques, allowing users
-to easily generate datasets and train RAG
-models using internal or specialized knowl-
-edge sources. We demonstrate the frame-
-work effectiveness by augmenting and fine-
-tuning Llama-3 and Phi-3 models with diverse
-RAG configurations, showcasing consistent im-
-provements across three knowledge-intensive
-datasets. Code is released as open-source in
-https://github.com/IntelLabs/RAGFoundry .
-1 Introduction
-Large Language Models (LLMs) have emerged as
-a transformative force in the field of AI, demon-
-strating an impressive ability to perform a wide
-range of tasks that traditionally required human in-
-telligence (Brown et al., 2020; Kojima et al., 2022).
-Despite their impressive capabilities, LLMs have
-inherent limitations. These models can produce
-plausible-sounding but incorrect or nonsensical an-
-swers, struggle with factual accuracy, lack access
-to up-to-date information after their training cutoff
-and struggle in attending to relevant information in
-large contexts (Huang et al., 2023; Liu et al., 2023).
-Data
-TrainingLoRA
-Inference
-LoadersAugmentation
-SelectorsRetrieversSamplersPromptersCachingAPI
-EvaluationEMF1FaithfulnessRelevancyAnswer ProcessorROUGE
-Figure 1: An overview of the RAG F OUNDRY frame-
-work: the Data Augmentation module persists RAG
-interactions into a dedicated dataset, which is then used
-for training, inference and evaluation.
-Retrieval-Augmented Generation (RAG) enhances
-LLMs performance by integrating external infor-
-mation using retrieval mechanisms. Combining re-
-trieval that leverages vast knowledge-bases outside
-theknowledge of the model, effectively addresses
-knowledge limitations, can reduce hallucinations,
-improve the relevance of generated content, pro-
-vide interpretability and could be vastly more cost-
-efficient (Lewis et al., 2021; Mallen et al., 2022;
-Gao et al., 2023; Asai et al., 2023; Borgeaud et al.,
-2021; Peng et al., 2023; de Jong et al., 2023). Fur-
-thermore, recent research indicates that fine-tuning
-LLMs for RAG can achieve state-of-the-art perfor-
-mance, surpassing that of larger, proprietary mod-
-els (Yu et al., 2024b; Liu et al., 2024).
-However, the implementation of RAG systems
-is inherently complex and requires a series of
-intricate decisions that can significantly impact
-the performance of the system. This process de-arXiv:2408.02545v1  [cs.CL]  5 Aug 2024
-mands a thorough understanding of the data and
-use case, and often, solutions do not generalize
-well to other domains (Barnett et al., 2024; Bala-
-guer et al., 2024). Some key RAG design decisions
-include text embedding, indexing parameters, re-
-trieval algorithms, query building, and prompt de-
-sign, among other considerations beyond the LLM
-configuration (Wang et al., 2024). Another issue is
-reproducibility: achieving consistent and compara-
-ble results across runs, datasets and tasks. Varia-
-tions in training data, pre-processing steps, model
-configurations, and hardware can lead to discrep-
-ancies in performance, making it challenging for
-researchers and practitioners to replicate findings
-and build upon previous work. Additionally, evalu-
-ating RAG systems presents a challenge due to the
-dual reliance on retrieval accuracy and generative
-quality. These systems require a sophisticated eval-
-uation suite that accounts for the interplay among
-the retrieved information, the formalization of data,
-and the generated output (Chen et al., 2023; Yu
-et al., 2024a; Es et al., 2024).
-We introduce RAG F OUNDRY , an open-source
-python framework for developing sophisticated
-retrieval-augmented LLMs for RAG use-cases. The
-library supports researchers and practitioners in the
-nuanced task of enhancing the capabilities of LLMs
-in RAG use cases. It is highly customizable, fa-
-cilitating rapid prototyping and experimentation
-across all aspects of RAG, including data selec-
-tion, aggregation and filtering, retrieval, text pro-
-cessing, document ranking, few-shot generation,
-prompt design using templates, fine-tuning, infer-
-ence, and evaluation. To cater to the specific needs
-of researchers, we designed the framework to func-
-tion as an end-to-end experimentation environment.
-The backbone of the library consists of four dis-
-tinct modules: data creation, training, inference,
-and evaluation. Each module is encapsulated and
-controlled by a configuration file, ensuring compat-
-ibility between the output of one module and the
-input of the next. This modular approach allows
-each step to be isolated and independently experi-
-mented with, enabling the production of multiple
-outputs and the concurrent execution of numerous
-experiments. Evaluation can be conducted on the
-generated outputs as well as on any feature within
-the data, including retrieval, ranking, and reason-
-ing.
-To illustrate the utility of the framework, we
-conducted experiments involving retrieval, fine-
-tuning, chain-of-thought (CoT) reasoning (Wuet al., 2023) and a negative distractor-documents
-technique (Zhang et al., 2024). We compared
-two widely accepted baseline models using vari-
-ous enhancement methods across three knowledge-
-intensive question-answering tasks, demonstrating
-the effectiveness of RAG F OUNDRY .
-2 Related Work
-There are numerous open-source tools related to
-the different aspects of RAG, namely inference,
-training and evaluation. LlamaIndex (Liu, 2022),
-LangChain (Chase, 2022) and Haystack (Pietsch
-et al., 2019) are well known libraries for composing
-RAG pipelines; however they are not focused on
-evaluation and their training capability is under-
-developed.
-Hoshi et al. (2023) proposes a framework for
-developing RAG-based LLMs; while our process-
-ing may be similar in the sense of being comprised
-of custom individual steps, they do not introduce
-any form of training. Khattab et al. (2023, 2022)
-presents a different approach, where LLM prompt-
-ing is represented as a programming language, to
-be optimized and compiled; a rather unique and
-general approach that could benefit RAG but has
-a high level of complexity due to the abstractions
-introduced. Saad-Falcon et al. (2024) focuses more
-on the evaluation aspect, by creating synthetic data
-and training an LLM critic to evaluate the RAG sys-
-tem. Hsia et al. (2024) studies aspects of retrieval
-on the performance of RAG; our RAG Foundry li-
-brary is general and enables experimentation on all
-aspects of RAG: retrieval, text-processing, prompt
-design, model selection, inference and evaluations.
-Recently, a concurrent work by Jin et al. (2024)
-proposes a RAG building framework, including
-some RAG implementations and datasets; we fo-
-cus on extensibility, letting users define custom
-types of pipelines with custom components. Rau
-et al. (2024) presents a framework, sharing a
-similar design-principle of extensibility-through-
-configuration as ours; their library imposes a spe-
-cific workflow structure (retriever, ranker, LLM)
-while our library is more general and does not im-
-poses any specific paradigm.
-3 RAG Foundry
-TheRAG F OUNDRY framework facilitates rapid
-prototyping and experimentation with various RAG
-settings and configurations. The library is com-
-posed of four modules: dataset creation, training,
 ================================================================================
 Title: Astute RAG: Overcoming Imperfect Retrieval Augmentation and Knowledge Conflicts for Large Language Models
 Authors: Fei Wang, Xingchen Wan, Ruoxi Sun, Jiefeng Chen, Sercan Ö. Arık

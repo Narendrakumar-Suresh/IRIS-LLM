@@ -21,26 +21,39 @@ export default function Response({ markdown }) {
     }
   }, [markdown]);
 
+  // Function to copy text to clipboard
+  const copyToClipboard = () => {
+    navigator.clipboard
+      .writeText(markdown)
+      .then(() => alert("Copied to clipboard!"))
+      .catch((err) => console.error("Failed to copy:", err));
+  };
+
+  // Function to download response as a .txt file
+  const downloadResponse = () => {
+    const blob = new Blob([markdown], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "response.txt";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="border-2 rounded-2xl p-2 mb-8">
       <div
-        className="w-full text-black prose p-2 "
+        className="w-full text-black prose p-2"
         dangerouslySetInnerHTML={{ __html: html }}
       />
       <div className="flex m-2 w-24 justify-around">
-        <Button
-          onClick={() => {
-            alert("Copy");
-          }}
-        >
-          <Copy />
+        <Button onClick={copyToClipboard}>
+          <Copy /> {/* Copy Button */}
         </Button>
-        <Button
-          onClick={() => {
-            alert("Download");
-          }}
-        >
-          <Download />
+        <Button onClick={downloadResponse}>
+          <Download /> {/* Download Button */}
         </Button>
       </div>
     </div>

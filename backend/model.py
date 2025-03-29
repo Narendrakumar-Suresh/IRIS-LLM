@@ -3,9 +3,11 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 import paper  # Importing your custom arXiv paper processing script
+import logging
 
+logging.basicConfig(level=logging.INFO)
 app = FastAPI()
-app.add_middleware(CORSMiddleware,allow_origins=["*"],allow_credential=True,allow_methods=['*'],
+app.add_middleware(CORSMiddleware,allow_origins=["*"],allow_methods=['*'],
                    allow_headers=['*'])
 
 class ChatRequest(BaseModel):
@@ -15,6 +17,8 @@ class ChatRequest(BaseModel):
 def generate_paper(request: ChatRequest):
     try:
         # Fetch and process arXiv papers dynamically
+        logging.info(f"Received request: {request}")
+        # return {"response": f"Generated paper for: {request.prompt}"}
         papers = paper.fetch_arxiv_papers(request.query)
         paper.process_papers(papers)
 
