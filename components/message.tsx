@@ -12,35 +12,21 @@ interface Message {
 }
 
 const markdownResponse = `
-  # Welcome!
-  **The Blue Sky: A Marvel of Atmospheric Science**
+The sky appears blue to us because of a phenomenon called Rayleigh scattering, named after the British physicist Lord Rayleigh. He discovered that when sunlight enters Earth's atmosphere, it encounters tiny molecules of gases such as nitrogen and oxygen.
 
-Have you ever stood outside on a clear day, gazing up at the brilliant blue sky above? It's easy to assume that the color of
-the sky is simply a result of our eyes playing tricks on us. However, it's actually a fascinating phenomenon that involves a
-combination of atmospheric science and physics.
+These gas molecules scatter the light in all directions, but they scatter shorter (blue) wavelengths more than longer (red) wavelengths. This is because blue light has a smaller wavelength and is therefore bent by the gas molecules less than red light.
 
-The sky appears blue because of a process called Rayleigh scattering, named after the British physicist Lord Rayleigh who first
-described it in the late 19th century. When sunlight enters Earth's atmosphere, it encounters tiny molecules of gases such as
-nitrogen (N2) and oxygen (O2). These molecules scatter the shorter, blue wavelengths of light more than the longer, red
-wavelengths.
+As a result, when sunlight enters the atmosphere, it is scattered in every direction, with the blue light being distributed throughout the sky. Our eyes perceive this scattered blue light as the color of the sky.
 
-As a result, the blue light is dispersed throughout the atmosphere, giving the sky its characteristic blue color. This
-phenomenon is more pronounced during the daytime when the sun is overhead, and it's less noticeable at night when the Earth is
-tilted away from the sun.
+In addition to Rayleigh scattering, other factors can also contribute to the appearance of the sky as blue, such as:
 
-But why does this specific color of blue dominate? There are a few factors that contribute to this:
+- **Dust and pollen particles**: These particles can scatter light and give the sky a more yellowish or brownish hue.
 
-1. **Atmospheric conditions**: The amount of dust, water vapor, and pollutants in the atmosphere can affect the way light
-scatters. For example, areas with high levels of pollution tend to have more brownish hues due to the presence of particulate
-matter.
-2. **Angle of the sun**: When sunlight passes through the atmosphere at an angle, it's scattered in all directions, including
-towards our eyes. This is known as diffuse scattering.
-3. **Clouds and aerosols**: Clouds and aerosols can reflect or scatter light in different ways, adding to the blue color of the
-sky.
+- Water vapor: Water molecules in the air can absorb and scatter light, which can also contribute to a bluer color.
 
-In summary, the blue sky we see on a sunny day is a result of Rayleigh scattering, which occurs when sunlight interacts with
-tiny molecules in the atmosphere. The specific combination of atmospheric conditions, angle of the sun, and presence of clouds
-and aerosols all contribute to the characteristic blue hue of our skies.
+- Clouds: The presence of clouds can scatter light and make the sky appear whiter or grayer.
+
+However, it's worth noting that the sky does not actually appear blue all the time. During sunrise and sunset, the sky can take on hues of red, orange, and pink due to the scattering of light by atmospheric particles.
   `;
 
 export default function Messenger() {
