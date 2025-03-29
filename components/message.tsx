@@ -54,7 +54,7 @@ export default function Messenger() {
       return;
     }
     // Add user message
-    setMessages([...messages, { text: value, sender: "ai" }]);
+    setMessages([...messages, { text: value, sender: "user" }]);
     // TODO: Add AI response here
     setValue("");
   };
@@ -86,10 +86,10 @@ export default function Messenger() {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="flex justify-center items-center p-4">
+      <div className="flex justify-center items-center p-4 bg-transparent">
         <Textarea
           placeholder="Enter your query"
-          className="w-[900px] h-24 mx-4 rounded-2xl text-black bg-white"
+          className="w-[900px] lg:h-12 sm:h-12 mx-4 rounded-2xl text-black"
           value={value}
           onChange={(e) => setValue(e.target.value)}
         />

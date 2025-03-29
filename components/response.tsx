@@ -28,10 +28,18 @@ export default function Response({ markdown }) {
         dangerouslySetInnerHTML={{ __html: html }}
       />
       <div className="flex m-2 w-24 justify-around">
-        <Button>
+        <Button
+          onClick={() => {
+            alert("Copy");
+          }}
+        >
           <Copy />
         </Button>
-        <Button>
+        <Button
+          onClick={() => {
+            alert("Download");
+          }}
+        >
           <Download />
         </Button>
       </div>
