@@ -27,18 +27,6 @@ IRIS-LLM is ideal for:
 
 ## System Architecture
 
-IRIS-LLM follows a structured pipeline to **gather, process, and generate knowledge-based reports**.
-
-```
-┌───────────────────┐      ┌────────────────────┐      ┌──────────────────┐
-│  User Request     │ ───> │  Research Module   │ ───> │  Report Generator │
-└───────────────────┘      ├────────────────────┤      ├──────────────────┤
-                            │   LLM Processing   │      │  Citation Engine │
-                            ├────────────────────┤      ├──────────────────┤
-                            │  Web/Data Sources  │      │  Formatting & API│
-                            └────────────────────┘      └──────────────────┘
-```
-
 - **Research Module** – Gathers relevant data from web sources, databases, and documents.
 - **LLM Processing** – Uses large language models to analyze and synthesize information.
 - **Report Generator** – Structures findings into a human-readable document.
