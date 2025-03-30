@@ -1,36 +1,127 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# IRIS-LLM
+
+## Overview
+
+**IRIS-LLM** is an **AI-driven knowledge curation system** that researches topics, extracts relevant information from various sources, and generates **comprehensive, well-structured reports with citations**. Built using **FastAPI** and **Ollama**, IRIS-LLM automates the process of gathering, synthesizing, and presenting information in a structured format, making it an invaluable tool for researchers, students, and professionals.
+
+### 🔹 Key Capabilities:
+✅ **Automated Research** – Collects and processes data from various sources.  
+✅ **Report Generation** – Produces well-organized, full-length reports.  
+✅ **Citations & References** – Ensures credibility with properly formatted citations.  
+✅ **Customizable Output** – Tailors reports based on user preferences.  
+✅ **Scalable API** – Easily integrates with existing systems for automated content generation.  
+
+---
+
+## Use Cases
+
+IRIS-LLM is ideal for:
+
+- 📚 **Academic Research** – Automates literature reviews and knowledge synthesis.
+- 🏛 **Policy & Legal Analysis** – Generates well-cited reports for policy development.
+- 🔬 **Scientific Summaries** – Condenses complex topics into accessible reports.
+- 💼 **Market & Competitive Analysis** – Extracts trends and insights from industry data.
+- 📰 **Automated Journalism** – Creates articles based on factual data.
+
+---
+
+## System Architecture
+
+IRIS-LLM follows a structured pipeline to **gather, process, and generate knowledge-based reports**.
+
+```
+┌───────────────────┐      ┌────────────────────┐      ┌──────────────────┐
+│  User Request     │ ───> │  Research Module   │ ───> │  Report Generator │
+└───────────────────┘      ├────────────────────┤      ├──────────────────┤
+                            │   LLM Processing   │      │  Citation Engine │
+                            ├────────────────────┤      ├──────────────────┤
+                            │  Web/Data Sources  │      │  Formatting & API│
+                            └────────────────────┘      └──────────────────┘
+```
+
+- **Research Module** – Gathers relevant data from web sources, databases, and documents.
+- **LLM Processing** – Uses large language models to analyze and synthesize information.
+- **Report Generator** – Structures findings into a human-readable document.
+- **Citation Engine** – Ensures accuracy with properly formatted references.
+
+---
 
 ## Getting Started
 
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### 1️⃣ Clone the Repository
+```sh
+git clone https://github.com/yourusername/IRIS-LLM.git
+cd IRIS-LLM/backend
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2️⃣ Set Up a Virtual Environment
+```sh
+python -m venv myenv
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3️⃣ Activate the Virtual Environment
+#### Windows (PowerShell)
+```sh
+myenv\Scripts\Activate
+```
+#### Mac/Linux
+```sh
+source myenv/bin/activate
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 4️⃣ Install Dependencies
+```sh
+pip install --upgrade pip
+pip install ollama fastapi uvicorn ruff
+```
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## Running the Server
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+To start the IRIS-LLM API server, run:
+```sh
+uvicorn main:app --reload
+```
+- API available at: **http://127.0.0.1:8000**
+- Interactive API Docs: **http://127.0.0.1:8000/docs**
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Example API Usage
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Generate a Research Report
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+#### **Request**
+```sh
+POST /generate-report
+{
+  "topic": "Impact of AI on Climate Change",
+  "sources": ["web", "papers"],
+  "format": "APA"
+}
+```
+
+#### **Response (Excerpt)**
+```json
+{
+  "title": "The Impact of AI on Climate Change",
+  "content": "Artificial Intelligence (AI) has the potential to significantly contribute to climate change mitigation through predictive analytics and optimization...",
+  "citations": [
+    "[1] Smith, J. (2023). AI and Climate Change. Journal of Sustainability.",
+    "[2] United Nations Report on AI in Energy Efficiency (2022)."
+  ]
+}
+```
+
+---
+
+## Future Roadmap
+
+- ✅ Research automation with LLM  
+- ✅ report can be exported as text file.
+- 🔜 Multi-source citation support (books, research papers, verified web sources)  
+- 🔜 Interactive user interface for report generation  
+- 🔜 AI-driven summarization & bias detection  
+
+
