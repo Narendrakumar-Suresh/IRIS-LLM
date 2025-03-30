@@ -1,41 +1,62 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
+# === Node.js Dependencies ===
 /node_modules
 /.pnp
 .pnp.*
+
+# === Yarn & PNPM ===
 .yarn/*
 !.yarn/patches
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
+.pnpm-debug.log*
+pnpm-lock.yaml
 
-# testing
+# === Testing ===
 /coverage
 
-# next.js
+# === Next.js ===
 /.next/
 /out/
 
-# production
+# === Production Builds ===
 /build
 
-# misc
+# === Misc ===
 .DS_Store
 *.pem
 
-# debug
+# === Debugging Logs ===
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# === Environment Variables ===
 .env*
-
-# vercel
 .vercel
 
-# typescript
+# === TypeScript ===
 *.tsbuildinfo
 next-env.d.ts
+
+# === Python (Backend) ===
+/backend/__pycache__/
+/backend/*.pyc
+/backend/*.pyo
+/backend/*.pyd
+/backend/.venv
+/backend/venv
+/backend/myenv
+
+# === Docker ===
+/backend/.dockerignore
+/backend/Dockerfile
+/backend/docker-compose.yml
+/backend/.env.docker
+
+# === Virtual Environments ===
+/venv/
+/myenv/
+/env/
