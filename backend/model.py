@@ -39,7 +39,7 @@ def generate_paper(request: ChatRequest):
         - Include a structured format (Abstract, Introduction, Main Body, Conclusion).
         """
 
-        response: ChatResponse = chat(model='llama3.2:1b', messages=[
+        response: ChatResponse = chat(model='gemma3:1b', messages=[
             {'role': 'user', 'content': prompt}
         ])
 

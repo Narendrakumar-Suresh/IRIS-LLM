@@ -1,883 +1,544 @@
-Title: In Defense of RAG in the Era of Long-Context Language Models
-Authors: Tan Yu, Anbang Xu, Rama Akkiraju
-Summary: Overcoming the limited context limitations in early-generation LLMs,
-retrieval-augmented generation (RAG) has been a reliable solution for
-context-based answer generation in the past. Recently, the emergence of
-long-context LLMs allows the models to incorporate much longer text sequences,
-making RAG less attractive. Recent studies show that long-context LLMs
-significantly outperform RAG in long-context applications. Unlike the existing
-works favoring the long-context LLM over RAG, we argue that the extremely long
-context in LLMs suffers from a diminished focus on relevant information and
-leads to potential degradation in answer quality. This paper revisits the RAG
-in long-context answer generation. We propose an order-preserve
-retrieval-augmented generation (OP-RAG) mechanism, which significantly improves
-the performance of RAG for long-context question-answer applications. With
-OP-RAG, as the number of retrieved chunks increases, the answer quality
-initially rises, and then declines, forming an inverted U-shaped curve. There
-exist sweet points where OP-RAG could achieve higher answer quality with much
-less tokens than long-context LLM taking the whole context as input. Extensive
-experiments on public benchmark demonstrate the superiority of our OP-RAG.
-PDF Link: http://arxiv.org/pdf/2409.01666v1
+Title: The lambda-q calculus can efficiently simulate quantum computers
+Authors: Philip Maymin
+Summary: We show that the lambda-q calculus can efficiently simulate quantum Turing
+machines by showing how the lambda-q calculus can efficiently simulate a class
+of quantum cellular automaton that are equivalent to quantum Turing machines.
+We conclude by noting that the lambda-q calculus may be strictly stronger than
+quantum computers because NP-complete problems such as satisfiability are
+efficiently solvable in the lambda-q calculus but there is a widespread doubt
+that they are efficiently solvable by quantum computers.
+PDF Link: http://arxiv.org/pdf/quant-ph/9702057v1
 Extracted Content:
-In Defense of RAG in the Era of Long-Context Language Models
-Tan Yu
-NVIDIA
-Santa Clara, California
-United States
-tayu@nvidia.comAnbang Xu
-NVIDIA
-Santa Clara, California
-United States
-anbangx@nvidia.comRama Akkiraju
-NVIDIA
-Santa Clara, California
-United States
-rakkiraju@nvidia.com
+arXiv:quant-ph/9702057v1  26 Feb 1997The lambda-q calculus can eﬃciently simulate
+quantum computers
+Philip Maymin∗
+Harvard University
+February 25, 1997
 Abstract
-Overcoming the limited context limitations in
-early-generation LLMs, retrieval-augmented
-generation (RAG) has been a reliable solution
-for context-based answer generation in the past.
-Recently, the emergence of long-context LLMs
-allows the models to incorporate much longer
-text sequences, making RAG less attractive.
-Recent studies show that long-context LLMs
-significantly outperform RAG in long-context
-applications. Unlike the existing works favor-
-ing the long-context LLM over RAG, we ar-
-gue that the extremely long context in LLMs
-suffers from a diminished focus on relevant in-
-formation and leads to potential degradation in
-answer quality. This paper revisits the RAG in
-long-context answer generation. We propose
-an order-preserve retrieval-augmented genera-
-tion (OP-RAG) mechanism, which significantly
-improves the performance of RAG for long-
-context question-answer applications. With
-OP-RAG, as the number of retrieved chunks
-increases, the answer quality initially rises, and
-then declines, forming an inverted U-shaped
-curve. There exist sweet points where OP-RAG
-could achieve higher answer quality with much
-less tokens than long-context LLM taking the
-whole context as input. Extensive experiments
-on public benchmark demonstrate the superior-
-ity of our OP-RAG.
-1 Introduction
-Due to the limited context window length
-(eg, 4096) of early-generation large language
-models (LLMs), retrieval augmented generation
-(RAG) (Guu et al., 2020; Lewis et al., 2020) is an
-indispensable choice to handle a large-scale context
-corpus. Since the answer quality is heavily depen-
-dent on the performance of the retrieval model, a
-lot of efforts are devoted to improving the retrieval
-recall/precision when designing the RAG system.
-Recently, the state-of-art LLMs support much
-longer context windows. For example, GPT-
-4O (OpenAI, 2023), Claudi-3.5 (Anthropic, 2024),
-(a) F1 score.
-(b) Input token count.
-Figure 1: Comparisons between the proposed order-
-preserve retrieval-augmented generation (OP-RAG) and
-approaches using long-context LLMs without RAG
-on En.QA dataset of ∞Bench. Our OP-RAG uses
-Llama3.1-70B as generator, which significantly outper-
-forms its counterpart using Llama3.1-70B without RAG.
-Llama3.1 (Meta, 2024b), Phi-3 (Abdin et al., 2024),
-and Mistral-Large2 (AI, 2024) all support 128-K
-context. Gemini-1.5-pro even supports a 1M con-
-text window. The recent emergence of long-context
-LLMs naturally leads to the question: is RAG nec-
-essary in the age of long-context LLMs? Li et al.
-(2024) recently systematically compares RAG with
-long-context (LC) LLMs (w/o RAG) and demon-
-strates that LC LLMs consistently outperform RAG
-in terms of answer quality.
-In this work, we re-examine the effectiveness
-of RAG in long-context answer generation. We
-observe that the order of retrieved chunks in thearXiv:2409.01666v1  [cs.CL]  3 Sep 2024
-context of LLM is vital for the answer quality. Dif-
-ferent from traditional RAG which places the re-
-trieved chunks in a relevance-descending order, we
-propose to preserve the order of retrieved chunks
-in the original text. Our experiments show that the
-proposed order-preserving mechanism significantly
-improves the answer quality of RAG.
-Meanwhile, using the proposed order-preserve
-RAG, as the number of retrieved chunks increases,
-the answer quality initially rises and then declines.
-This is because, with more retrieved chunks, the
-model has access to more potentially relevant in-
-formation, which improves the chances of retriev-
-ing the correct context needed to generate a high-
-quality answer. However, as more chunks are re-
-trieved, the likelihood of introducing irrelevant or
-distracting information also increases. This excess
-information can confuse the model, leading to a
-decline in answer quality. The trade-off, therefore,
-is between improving recall by retrieving more
-context and maintaining precision by limiting dis-
-tractions. The optimal point is where the balance
-between relevant and irrelevant information maxi-
-mizes the quality of the answer. Beyond this point,
-the introduction of too much irrelevant information
-degrades the model’s performance. It explains the
-inferior performance of the approach taking the
-whole long context as the input of LLM.
-Different from the conclusion from Li et al.
-(2024), with the proposed order-preserving mech-
-anism, RAG achieves higher answer quality com-
-pared with its counterparts that rely solely on Long-
-Context LLMs. As shown in Figure 4a, On En.QA
-dataset of ∞Bench (Zhang et al., 2024), using only
-16K retrieved tokens, we achieve 44.43F1 score
-with Llama3.1-70B. In contrast, without RAG,
-Llama3.1-70B making full use of 128K context
-only achieves 34.32F1 score, GPT-4O achieves
-only 32.36F1 score and Gemini-1.5-Pro obtains
-only43.08F1 score as evaluated by Li et al. (2024).
-That is, RAG could achieve a higher F1 score even
-with a significant reduction on input length.
-2 Related Work
-Retrieval-augmented generation. By incorporat-
-ing the external knowledge as context, retrieval-
-augmented generation (RAG) (Guu et al., 2020;
-Lewis et al., 2020; Mialon et al., 2023) allows lan-
-guage model to access up-to-date and specific in-
-formation, reducing hallucinations and improving
-factual accuracy. Before the era of long-context
-Figure 2: Vanilla RAG versus the proposed order-
-preserve the RAG. As shown in the example, a long
-document is cropped into 13chunks, {ci}13
-i=1. The sim-
-ilarity score is appended to each chunk. We retrieve
-top 4 chunks with the highest similarity scores. Vanilla
-RAG places the chunks in a score-descending order,
-whereas the proposed order-preserve RAG places the
-chunks based on the order in the original document.
-LLMs, RAG is a promising solution to overcoming
-the limitation of short context window.
-Long-context LLM. To support the long sequence
-of language models, many efforts have been de-
-voted to improving the computing efficiency of
-self-attention (Choromanski et al., 2020; Zaheer
-et al., 2020; Tay et al., 2020; Dao et al., 2022; Dao,
-2024) and boosting extensibility of positional en-
-coding (Press et al., 2021; Sun et al., 2022; Chen
-et al., 2023). Recently, the flagship LLMs such as
-GPT-4O (OpenAI, 2023), Gemini-1.5-Pro (Reid
-et al., 2024), Claudi-3.5 (Anthropic, 2024), Grok-
-2 (xAI, 2024), and Llama3.1 (Meta, 2024a) have
-supported extremely large context. With the ex-
-istence of long-context LLMs, RAG is no longer
-a indispensable module for long-context question-
-answering task. Recently, Li et al. (2024) con-
-cludes that using long-context without RAG could
-significantly outperforms RAG. Different from the
-conclusion from (Li et al., 2024), in this work,
-we demonstrate the proposed order-preserve RAG
-could beat the long-context LLMs without RAG.
-3 Order-Preserve RAG
-Let us denote the long textual context, e.g., a long
-document, by d. We split dintoNchunks sequen-
-tially and uniformly, {ci}N
-i=1. The index iimplies
-the sequential order of the chunk ciind. That is,
-ci−1denotes the chunk before ciwhereas ci+1de-
-notes the chunk right after ci. Given a query q, we
-obtain the relevance score of the chunk ciby com-
-puting cosine similarity between the embedding of
-qand that of ci:
-si= cos(emb( q),emb(ci)), (1)
-================================================================================
-Title: Modular RAG: Transforming RAG Systems into LEGO-like Reconfigurable Frameworks
-Authors: Yunfan Gao, Yun Xiong, Meng Wang, Haofen Wang
-Summary: Retrieval-augmented Generation (RAG) has markedly enhanced the capabilities
-of Large Language Models (LLMs) in tackling knowledge-intensive tasks. The
-increasing demands of application scenarios have driven the evolution of RAG,
-leading to the integration of advanced retrievers, LLMs and other complementary
-technologies, which in turn has amplified the intricacy of RAG systems.
-However, the rapid advancements are outpacing the foundational RAG paradigm,
-with many methods struggling to be unified under the process of
-"retrieve-then-generate". In this context, this paper examines the limitations
-of the existing RAG paradigm and introduces the modular RAG framework. By
-decomposing complex RAG systems into independent modules and specialized
-operators, it facilitates a highly reconfigurable framework. Modular RAG
-transcends the traditional linear architecture, embracing a more advanced
-design that integrates routing, scheduling, and fusion mechanisms. Drawing on
-extensive research, this paper further identifies prevalent RAG
-patterns-linear, conditional, branching, and looping-and offers a comprehensive
-analysis of their respective implementation nuances. Modular RAG presents
-innovative opportunities for the conceptualization and deployment of RAG
-systems. Finally, the paper explores the potential emergence of new operators
-and paradigms, establishing a solid theoretical foundation and a practical
-roadmap for the continued evolution and practical deployment of RAG
-technologies.
-PDF Link: http://arxiv.org/pdf/2407.21059v1
-Extracted Content:
-1
-Modular RAG: Transforming RAG Systems into
-LEGO-like Reconfigurable Frameworks
-Yunfan Gao, Yun Xiong, Meng Wang, Haofen Wang
-Abstract —Retrieval-augmented Generation (RAG) has
-markedly enhanced the capabilities of Large Language Models
-(LLMs) in tackling knowledge-intensive tasks. The increasing
-demands of application scenarios have driven the evolution
-of RAG, leading to the integration of advanced retrievers,
-LLMs and other complementary technologies, which in turn
-has amplified the intricacy of RAG systems. However, the rapid
-advancements are outpacing the foundational RAG paradigm,
-with many methods struggling to be unified under the process
-of “retrieve-then-generate”. In this context, this paper examines
-the limitations of the existing RAG paradigm and introduces
-the modular RAG framework. By decomposing complex RAG
-systems into independent modules and specialized operators, it
-facilitates a highly reconfigurable framework. Modular RAG
-transcends the traditional linear architecture, embracing a
-more advanced design that integrates routing, scheduling, and
-fusion mechanisms. Drawing on extensive research, this paper
-further identifies prevalent RAG patterns—linear, conditional,
-branching, and looping—and offers a comprehensive analysis
-of their respective implementation nuances. Modular RAG
-presents innovative opportunities for the conceptualization
-and deployment of RAG systems. Finally, the paper explores
-the potential emergence of new operators and paradigms,
-establishing a solid theoretical foundation and a practical
-roadmap for the continued evolution and practical deployment
-of RAG technologies.
-Index Terms —Retrieval-augmented generation, large language
-model, modular system, information retrieval
-I. I NTRODUCTION
-LARGE Language Models (LLMs) have demonstrated
-remarkable capabilities, yet they still face numerous
-challenges, such as hallucination and the lag in information up-
-dates [1]. Retrieval-augmented Generation (RAG), by access-
-ing external knowledge bases, provides LLMs with important
-contextual information, significantly enhancing their perfor-
-mance on knowledge-intensive tasks [2]. Currently, RAG, as
-an enhancement method, has been widely applied in various
-practical application scenarios, including knowledge question
-answering, recommendation systems, customer service, and
-personal assistants. [3]–[6]
-During the nascent stages of RAG , its core framework is
-constituted by indexing, retrieval, and generation, a paradigm
-referred to as Naive RAG [7]. However, as the complexity
-of tasks and the demands of applications have escalated, the
-Yunfan Gao is with Shanghai Research Institute for Intelligent Autonomous
-Systems, Tongji University, Shanghai, 201210, China.
-Yun Xiong is with Shanghai Key Laboratory of Data Science, School of
-Computer Science, Fudan University, Shanghai, 200438, China.
-Meng Wang and Haofen Wang are with College of Design and Innovation,
-Tongji University, Shanghai, 20092, China. (Corresponding author: Haofen
-Wang. E-mail: carter.whfcarter@gmail.com)limitations of Naive RAG have become increasingly apparent.
-As depicted in Figure 1, it predominantly hinges on the
-straightforward similarity of chunks, result in poor perfor-
-mance when confronted with complex queries and chunks with
-substantial variability. The primary challenges of Naive RAG
-include: 1) Shallow Understanding of Queries. The semantic
-similarity between a query and document chunk is not always
-highly consistent. Relying solely on similarity calculations
-for retrieval lacks an in-depth exploration of the relationship
-between the query and the document [8]. 2) Retrieval Re-
-dundancy and Noise. Feeding all retrieved chunks directly
-into LLMs is not always beneficial. Research indicates that
-an excess of redundant and noisy information may interfere
-with the LLM’s identification of key information, thereby
-increasing the risk of generating erroneous and hallucinated
-responses. [9]
-To overcome the aforementioned limitations, Advanced
-RAG paradigm focuses on optimizing the retrieval phase,
-aiming to enhance retrieval efficiency and strengthen the
-utilization of retrieved chunks. As shown in Figure 1 ,typical
-strategies involve pre-retrieval processing and post-retrieval
-processing. For instance, query rewriting is used to make
-the queries more clear and specific, thereby increasing the
-accuracy of retrieval [10], and the reranking of retrieval results
-is employed to enhance the LLM’s ability to identify and
-utilize key information [11].
-Despite the improvements in the practicality of Advanced
-RAG, there remains a gap between its capabilities and real-
-world application requirements. On one hand, as RAG tech-
-nology advances, user expectations rise, demands continue to
-evolve, and application settings become more complex. For
-instance, the integration of heterogeneous data and the new
-demands for system transparency, control, and maintainability.
-On the other hand, the growth in application demands has
-further propelled the evolution of RAG technology.
-As shown in Figure 2, to achieve more accurate and efficient
-task execution, modern RAG systems are progressively inte-
-grating more sophisticated function, such as organizing more
-refined index base in the form of knowledge graphs, integrat-
-ing structured data through query construction methods, and
-employing fine-tuning techniques to enable encoders to better
-adapt to domain-specific documents.
-In terms of process design, the current RAG system has
-surpassed the traditional linear retrieval-generation paradigm.
-Researchers use iterative retrieval [12] to obtain richer con-
-text, recursive retrieval [13] to handle complex queries, and
-adaptive retrieval [14] to provide overall autonomy and flex-
-ibility. This flexibility in the process significantly enhancesarXiv:2407.21059v1  [cs.CL]  26 Jul 2024
-2
-Fig. 1. Cases of Naive RAG and Advanced RAG.When faced with complex
-questions, both encounter limitations and struggle to provide satisfactory
-answers. Despite the fact that Advanced RAG improves retrieval accuracy
-through hierarchical indexing, pre-retrieval, and post-retrieval processes, these
-relevant documents have not been used correctly.
-the expressive power and adaptability of RAG systems, en-
-abling them to better adapt to various application scenarios.
-However, this also makes the orchestration and scheduling of
-workflows more complex, posing greater challenges to system
-design. Specifically, RAG currently faces the following new
-challenges:
-Complex data sources integration. RAG are no longer
-confined to a single type of unstructured text data source but
-have expanded to include various data types, such as semi-
-structured data like tables and structured data like knowledge
-graphs [15]. Access to heterogeneous data from multiple
-sources can provide the system with a richer knowledge
-background, and more reliable knowledge verification capa-
-bilities [16].
-New demands for system interpretability, controllability,
-Fig. 2. Case of current Modular RAG.The system integrates diverse data
-and more functional components. The process is no longer confined to linear
-but is controlled by multiple control components for retrieval and generation,
-making the entire system more flexible and complex.
-================================================================================
-Title: RAG-WM: An Efficient Black-Box Watermarking Approach for Retrieval-Augmented Generation of Large Language Models
-Authors: Peizhuo Lv, Mengjie Sun, Hao Wang, Xiaofeng Wang, Shengzhi Zhang, Yuxuan Chen, Kai Chen, Limin Sun
-Summary: In recent years, tremendous success has been witnessed in Retrieval-Augmented
-Generation (RAG), widely used to enhance Large Language Models (LLMs) in
-domain-specific, knowledge-intensive, and privacy-sensitive tasks. However,
-attackers may steal those valuable RAGs and deploy or commercialize them,
-making it essential to detect Intellectual Property (IP) infringement. Most
-existing ownership protection solutions, such as watermarks, are designed for
-relational databases and texts. They cannot be directly applied to RAGs because
-relational database watermarks require white-box access to detect IP
-infringement, which is unrealistic for the knowledge base in RAGs. Meanwhile,
-post-processing by the adversary's deployed LLMs typically destructs text
-watermark information. To address those problems, we propose a novel black-box
-"knowledge watermark" approach, named RAG-WM, to detect IP infringement of
-RAGs. RAG-WM uses a multi-LLM interaction framework, comprising a Watermark
-Generator, Shadow LLM & RAG, and Watermark Discriminator, to create watermark
-texts based on watermark entity-relationship tuples and inject them into the
-target RAG. We evaluate RAG-WM across three domain-specific and two
-privacy-sensitive tasks on four benchmark LLMs. Experimental results show that
-RAG-WM effectively detects the stolen RAGs in various deployed LLMs.
-Furthermore, RAG-WM is robust against paraphrasing, unrelated content removal,
-knowledge insertion, and knowledge expansion attacks. Lastly, RAG-WM can also
-evade watermark detection approaches, highlighting its promising application in
-detecting IP infringement of RAG systems.
-PDF Link: http://arxiv.org/pdf/2501.05249v1
-Extracted Content:
-RAG-WM: An Efficient Black-Box Watermarking Approach for
-Retrieval-Augmented Generation of Large Language Models
-Peizhuo Lv
-Institute of Information Engineering,
-Chinese Academy of Sciences
-China
-lvpeizhuo@gmail.comMengjie Sun
-Institute of Information Engineering,
-Chinese Academy of Sciences
-China
-sunmengjie@iie.ac.cnHao Wang
-School of Cyber Science and
-Technology, Shandong University
-China
-202437082@mail.sdu.edu.cn
-Xiaofeng Wang
-Indiana University Bloomington
-USA
-xw7@iu.eduShengzhi Zhang
-Department of Computer Science,
-Metropolitan College, Boston
-University
-USA
-shengzhi@bu.eduYuxuan Chen
-School of Cyber Science and
-Technology, Shandong University
-China
-chenyuxuan@sdu.edu.cn
-Kai Chen
-Institute of Information Engineering,
-Chinese Academy of Sciences
-China
-chenkai@iie.ac.cnLimin Sun
-Institute of Information Engineering,
-Chinese Academy of Sciences
-China
-sunlimin@iie.ac.cn
-Abstract
-In recent years, tremendous success has been witnessed in Retrieval-
-Augmented Generation (RAG), widely used to enhance Large Lan-
-guage Models (LLMs) in domain-specific, knowledge-intensive, and
-privacy-sensitive tasks. However, attackers may steal those valu-
-able RAGs and deploy or commercialize them, making it essential
-to detect Intellectual Property (IP) infringement. Most existing
-ownership protection solutions, such as watermarks, are designed
-for relational databases and texts. They cannot be directly applied
-to RAGs because relational database watermarks require white-
-box access to detect IP infringement, which is unrealistic for the
-knowledge base in RAGs. Meanwhile, post-processing by the ad-
-versary’s deployed LLMs typically destructs text watermark infor-
-mation. To address those problems, we propose a novel black-box
-“knowledge watermark” approach, named RAG-WM, to detect IP
-infringement of RAGs. RAG-WM uses a multi-LLM interaction
-framework, comprising a Watermark Generator, Shadow LLM &
-RAG, and Watermark Discriminator, to create watermark texts
-based on watermark entity-relationship tuples and inject them into
-the target RAG. We evaluate RAG-WM across three domain-specific
-and two privacy-sensitive tasks on four benchmark LLMs. Experi-
-mental results show that RAG-WM effectively detects the stolen
-RAGs in various deployed LLMs. Furthermore, RAG-WM is robust
-against paraphrasing, unrelated content removal, knowledge inser-
-tion, and knowledge expansion attacks. Lastly, RAG-WM can also
-evade watermark detection approaches, highlighting its promising
-application in detecting IP infringement of RAG systems.
-1 Introduction
-Large Language Models (LLMs), such as GPT [ 47] and Llama [ 43],
-have gained significant attention and are applied across diversefields, including healthcare [ 35,59], content generation [ 73], fi-
-nance [ 72], etc. However, they face considerable challenges, espe-
-cially with tasks that are domain-specific or knowledge-intensive.
-They are particularly prone to generating “hallucinations” [ 70]
-when responding to queries outside their training data. Addition-
-ally, many users are unwilling to upload their sensitive data to
-third-party platforms for LLM training due to data privacy con-
-cerns. To address these problems, Retrieval-Augmented Generation
-(RAG), consisting of a retriever model and a knowledge base, is
-proposed to improve LLMs by retrieving relevant information from
-the knowledge bases according to semantic similarity. For example,
-Microsoft has incorporated RAG into its Azure OpenAI service [ 45],
-and the Llama models developed by Meta support RAG integra-
-tion in certain applications [ 44]. Additionally, users can implement
-a team-specific RAG knowledge base on a preferred model (e.g.,
-Llama) using the AnythingLLM AI application [23].
-Building an RAG system, particularly its knowledge bases, re-
-quires significant investment in resources such as data collection,
-cleaning, organization, updates, and maintenance by skilled per-
-sonnel. For example, as noted in [ 48], CyC [ 36] costs about $120M;
-DBpedia [ 20] is developed at the cost of $5.1M; YAGO [ 64] costs
-$10M. Therefore, Intellectual Property (IP) protection of the RAG
-system is essential to protect the investment of the original RAG
-developers. Digital watermarking is a content-based, information-
-hiding technique for embedding/detecting digital information (usu-
-ally related to the owner’s identifier) into/from carrier data and
-has been demonstrated successful in relational databases [ 4,30,38],
-texts [ 31,46,50], DNN models [ 3], etc. However, those watermark-
-ing approaches cannot be directly used to protect the IP of RAG
-systems. On the one hand, when the owner utilizes the model water-
-marking approach like [ 3] to embed a watermark into the retriever
-model to protect the IP of the RAG system, attackers can easilyarXiv:2501.05249v1  [cs.CR]  9 Jan 2025
-bypass such IP protection by replacing the watermarked retriever
-with a clean retriever without any watermark embedded. On the
-other hand, applying the database watermarking approach like [ 30]
-to protect the IP of the knowledge base (the core component of
-RAG) requires direct access to the contents of the database for
-verification, i.e., the “white-box” access. However, owners often
-only have the “black-box” access to the suspicious RAG systems
-deployed by adversaries, allowing users to view outputs of LLM
-without direct access to the underlying knowledge base.
-Recently, WARD [ 29] was proposed to detect unauthorized usage
-of RAG using an LLM red-green list watermark to paraphrase all
-texts of RAGs. However, LLM red-green list watermarks are not
-robust against paraphrasing attacks [ 33,40,49,68]. Additionally,
-WARD is vulnerable to piracy attacks, where attackers paraphrase
-all texts in the stolen RAG using their own red-green list, thus
-fraudulently claiming ownership. More importantly, WARD did
-not consider or discuss the unique challenges posed by RAG for
-effective IP protection. To protect the IP of their RAGs, owners
-have to embed watermarks (e.g., format-based, syntactic-based,
-and red-green list-based) [ 14,31,42] into the knowledge database
-since embedding watermarks into retrievers can be easily bypassed.
-After stealing the RAG, attackers often deploy it with LLMs of
-their choice, making direct access to the outputs of the knowledge
-database impossible. Instead, the owners can only access the post-
-processed outputs by attackers’ LLMs, which might have destroyed
-the watermark embedded in the knowledge database.
-RAG-WM. To solve these challenges, we propose RAG-WM, a
-novel black-box watermarking method for RAG systems. It protects
-the IP of valuable RAGs and enables IP infringement detection.
-Specifically, our method embeds a “knowledge watermark” into
-the knowledge base, considering that knowledge can be success-
-fully retrieved and remain intact even after being processed by
-LLMs. To generate watermark texts, we first extract entities and
-relationships from the knowledge base, identify the high-frequency
-entities and relationships, and use them to generate tuples of wa-
-termark entities and corresponding relations. Since the watermark
-entities and relationships are derived from the original RAG, this
-effectively enhances the watermark’s stealthiness. This process
-involves a keyed hash function, with the secret key only known
-to the owner, thus enhancing the security of the watermark. We
-then employ a multi-LLM interaction watermarking technique that
-comprises a Watermark Generator, Shadow LLM&RAG, and Wa-
-termark Discriminator, to produce watermark texts based on these
-entity-relationship tuples. This framework significantly improves
-the quality of the watermark texts, ensuring that the watermark
-knowledge information remains intact and retrievable even after
-being processed by adversary-deployed LLMs. Finally, we propose a
-relevant-text concatenation technique to inject the watermark text
-into a position that facilitates easy retrieval, thus generating the
-watermarked RAG. Whenever IP infringement detection is needed,
-e.g., a suspicious LLM exhibits good performance in a domain where
-the owner’s RAG contains specialized knowledge, we query the
-suspicious LLM with the watermark question and apply a binomial
-test to the responses to detect IP infringement.
-We evaluate our watermark and demonstrate its effectiveness for
-RAG systems in three domain-specific tasks (NQ, HotpotQA, andMS-MARCO), two privacy-sensitive tasks (TREC-COVID and NF-
-Corpus), and across four benchmark LLMs: GPT-3.5-Turbo, PaLM 2,
-Llama-2-7B, and Vicuna-13B. First, RAG-WM effectively detects IP
-infringement of stolen RAGs across various LLM models, achiev-
-ing 100% verification success and demonstrating its effectiveness.
-Moreover, RAG-WM does not falsely detect IP infringement of inno-
-cent RAGs without the embedded watermark, demonstrating high
-integrity. Second, the main performance alignment between the wa-
-termarked RAG and the clean RAG is 97.87% on average, indicating
-good fidelity. Third, RAG-WM is robust against attacks that aim to
-destroy any embedded watermark, such as Paraphrasing, Unrelated
-Content Removal, Knowledge Insertion, and Knowledge Expan-
-sion Attacks. After these attacks, the watermarks still achieve 100%
-verification success. Fourth, RAG-WM is stealthy and not easily
-detectable by watermark detection methods (Detection by Perplex-
-ity and Duplicate Text Filtering), with detection success rates of
-13.05% and 0%, respectively. Finally, we conduct extensive evalua-
-tions using various parameters of RAG system and RAG-WM, and
-RAG-WM achieves 100% verification success.
-Contributions. We summarize our contributions as below:
-•We propose RAG-WM, a novel “knowledge watermark” method
-for RAG systems, which generates high-quality watermark texts
-by the proposed Multi-LLM Interaction technique, effectively pro-
-tecting the IP of RAGs. It ensures reliable watermark verification
-and causes minimal degradation in clean data performance.
-•We comprehensively evaluate the proposed approach on four
-different LLMs and five datasets, and the results demonstrate
-effective watermark performance and good main task perfor-
-mance preservation. We release our watermark implementation
-on GitHub [ 2], contributing to the RAG community to protect IP.
-2 Background and Related Work
-2.1 Retrieval-Augmented Generation (RAG)
-Naive RAGs. Retrieval-augmented generation (RAG) enhances
-large language models by integrating external knowledge databases,
-which improves accuracy and credibility in knowledge-intensive
-tasks like question-answering [ 7,53], medical applications [ 37],
-dialogue systems [ 60], etc. An RAG system comprises three com-
-ponents: a knowledge database, a retriever, and a large language
-model (LLM). The RAG process involves two main steps: relevant
-knowledge retrieval and answer generation.
-Relevant Knowledge Retrieval. When presented with a question
-𝑄, RAG retrieves the 𝑘text records most relevant to 𝑄from the
-knowledge database 𝐾𝐷. The retriever first encodes the question
-using the text encoder 𝑒to produce the embedding vector 𝑒(𝑄).
-It then applies a similarity metric 𝑠𝑖𝑚(e.g., Cosine Similarity, Eu-
-clidean Distance) to assess the similarity between 𝑒(𝑄)and each
-text record𝑒(𝑟𝑖)in𝐾𝐷, where𝑟𝑖∈𝐾𝐷. Finally, RAG selects 𝑘text
-records{𝑟1,...,𝑟𝑘}that are most relevant to question 𝑄as below:
-{𝑟1,𝑟2,...,𝑟𝑘}=top-𝑘(𝑠𝑖𝑚(𝑒(𝑄),𝑒(𝑟𝑖))),𝑟𝑖∈𝐾𝐷 (1)
-Answer Generation. Give the question 𝑄, the𝑘most relevant
-text records{𝑟1,...,𝑟𝑘}, and an LLM 𝐿𝐿𝑀(), the output answer is
-obtained by inputting the question and texts into the LLM:
-𝑎𝑛𝑠𝑤𝑒𝑟 =𝐿𝐿𝑀(𝑄,{𝑟1,...,𝑟𝑘}) (2)
-2
-================================================================================
-Title: MultiHop-RAG: Benchmarking Retrieval-Augmented Generation for Multi-Hop Queries
-Authors: Yixuan Tang, Yi Yang
-Summary: Retrieval-augmented generation (RAG) augments large language models (LLM) by
-retrieving relevant knowledge, showing promising potential in mitigating LLM
-hallucinations and enhancing response quality, thereby facilitating the great
-adoption of LLMs in practice. However, we find that existing RAG systems are
-inadequate in answering multi-hop queries, which require retrieving and
-reasoning over multiple pieces of supporting evidence. Furthermore, to our
-knowledge, no existing RAG benchmarking dataset focuses on multi-hop queries.
-In this paper, we develop a novel dataset, MultiHop-RAG, which consists of a
-knowledge base, a large collection of multi-hop queries, their ground-truth
-answers, and the associated supporting evidence. We detail the procedure of
-building the dataset, utilizing an English news article dataset as the
-underlying RAG knowledge base. We demonstrate the benchmarking utility of
-MultiHop-RAG in two experiments. The first experiment compares different
-embedding models for retrieving evidence for multi-hop queries. In the second
-experiment, we examine the capabilities of various state-of-the-art LLMs,
-including GPT-4, PaLM, and Llama2-70B, in reasoning and answering multi-hop
-queries given the evidence. Both experiments reveal that existing RAG methods
-perform unsatisfactorily in retrieving and answering multi-hop queries. We hope
-MultiHop-RAG will be a valuable resource for the community in developing
-effective RAG systems, thereby facilitating greater adoption of LLMs in
-practice. The MultiHop-RAG and implemented RAG system is publicly available at
-https://github.com/yixuantt/MultiHop-RAG/.
-PDF Link: http://arxiv.org/pdf/2401.15391v1
-Extracted Content:
-MultiHop-RAG: Benchmarking Retrieval-Augmented Generation for
-Multi-Hop Queries
-Yixuan Tang andYi Yang
-Hong Kong University of Science and Technology
-{yixuantang,imyiyang}@ust.hk
-Abstract
-Retrieval-augmented generation (RAG) aug-
-ments large language models (LLM) by re-
-trieving relevant knowledge, showing promis-
-ing potential in mitigating LLM hallucinations
-and enhancing response quality, thereby facil-
-itating the great adoption of LLMs in prac-
-tice. However, we find that existing RAG sys-
-tems are inadequate in answering multi-hop
-queries, which require retrieving and reasoning
-over multiple pieces of supporting evidence.
-Furthermore, to our knowledge, no existing
-RAG benchmarking dataset focuses on multi-
-hop queries. In this paper, we develop a novel
-dataset, MultiHop-RAG , which consists of a
-knowledge base, a large collection of multi-
-hop queries, their ground-truth answers, and
-the associated supporting evidence. We detail
-the procedure of building the dataset, utiliz-
-ing an English news article dataset as the un-
-derlying RAG knowledge base. We demon-
-strate the benchmarking utility of MultiHop-
-RAG in two experiments. The first experiment
-compares different embedding models for re-
-trieving evidence for multi-hop queries. In the
-second experiment, we examine the capabili-
-ties of various state-of-the-art LLMs, includ-
-ing GPT-4, PaLM, and Llama2-70B, in rea-
-soning and answering multi-hop queries given
-the evidence. Both experiments reveal that ex-
-isting RAG methods perform unsatisfactorily
-in retrieving and answering multi-hop queries.
-We hope MultiHop-RAG will be a valuable re-
-source for the community in developing effec-
-tive RAG systems, thereby facilitating greater
-adoption of LLMs in practice. The MultiHop-
-RAG and implemented RAG system is publicly
-available at https://github.com/yixuantt/
-MultiHop-RAG/ .
-1 Introduction
-The emergence of large language models (LLMs),
-such as ChatGPT, has fostered a wide range of inno-
-vations, powering intelligent chatbots and other nat-
-ural language processing (NLP) applications (Ope-
-Figure 1: RAG with multi-hop query.
-nAI, 2023). One promising use case is Retrieval-
-Augmented Generation (RAG) (Asai et al., 2023),
-which optimizes the output of a large language
-model by referencing an external knowledge base
-outside of the LLM training data sources before
-generating a response. RAG improves LLM’s re-
-sponse (Borgeaud et al., 2022) and also mitigates
-the occurrence of hallucinations, thereby enhancing
-the models’ credibility (Gao et al., 2023). LLM-
-based frameworks, such as LlamaIndex (Liu, 2022)
-and LangChain (Chase, 2022), specialize in sup-
-porting RAG pipelines.
-In real-world Retrieval-Augmented Generation
-(RAG) applications, a user’s query often necessi-
-tates retrieving and reasoning over evidence from
-multiple documents, a process known as multi-hop
-query . For instance, consider financial analysis us-
-ing a database of financial reports. A financial ana-
-lyst might query, Which company among Google,
-Apple, and Nvidia reported the largest profit mar-
-gins in their third-quarter reports for 2023? or
-inquire about a specific company’s performance
-over time, such as How does Apple’s sales trend
-look over the past three years? These queries re-
-quire evidence from multiple documents to formu-
-late an answer. Due to the multifaceted nature of
-such queries, involving information from various
-sources, traditional similarity matching methods
-like cosine similarity between query and financialarXiv:2401.15391v1  [cs.CL]  27 Jan 2024
-News source Fortune Magazine The Sydney Morning Herald
-Evidence Back then, just like today, home prices had boomed
-for years before Fed officials were ultimately forced
-to hike interest rates aggressively in an attempt to
-fight inflation.Postponements of such reports could complicate
-things for the Fed, which has insisted it will make
-upcoming decisions on interest rates based on what
-incoming data say about the economy.
-Claim Federal Reserve officials were forced to aggressively
-hike interest rates to combat inflation after years of
-booming home prices.The Federal Reserve has insisted that it will base its
-upcoming decisions on interest rates on the incoming
-economic data.
-Bridge-Topic Interest rate hikes to combat inflation Interest rate decisions based on economic data
-Bridge-Entity Federal Reserve Federal Reserve
-Query Does the article from Fortune suggest that the Federal Reserve’s interest rate hikes are a response to past
-conditions, such as booming home prices, while The Sydney Morning Herald article indicates that the
-Federal Reserve’s future interest rate decisions will be based on incoming economic data?
-Answer Yes
-Table 1: An example of a multi-hop query, including supporting evidence from two news articles, the paraphrased
-claim, the bridge-topic and bridge-entity, and the corresponding answer.
-report chunk embeddings might not yield optimal
-results. We demonstrate this multi-hop retrieval
-process in Figure 1.
-However, existing RAG benchmarks, such as
-RGB (Chen et al., 2023) and RECALL (Liu et al.,
-2023), mainly evaluate a simple case where the an-
-swer of a query can be retrieved and solved using
-one single piece of evidence. None of these bench-
-marks assess the retrieval and reasoning capability
-of LLMs for complex multi-hop queries. To ad-
-dress this gap and make RAG benchmarking more
-closely resemble real-world scenarios, in this paper,
-we introduce MultiHop-RAG . To our knowledge,
-MultiHop-RAG is one of the first RAG datasets
-focusing specifically on multi-hop queries.
-Based on the RAG queries commonly encoun-
-tered in real-world scenarios, we first categorize
-multi-hop queries into four types: Inference query ,
-Comparison query ,Temporal query , and Null
-query . The first three types — Inference, Com-
-parison, and Temporal — require the retrieval and
-analysis of evidence from multiple sources, encom-
-passing tasks like inferring relationships, compar-
-ing data points, and sequencing events over time.
-The Null query represents a scenario where the
-query cannot be derived from the knowledge base.
-This category is crucial for assessing whether an
-LLM might hallucinate an answer to a multi-hop
-query when the retrieved text lacks relevance.
-We construct our RAG knowledge base using a
-collection of news articles. Using GPT-4 as a data
-generator, we then take an extensive procedure to
-construct a diverse set of multi-hop queries, each
-requiring the retrieval and reasoning over multiple
-documents. An example of query construction is
-shown in Table 1. First, we begin by extractingfactual sentences from each news article as evi-
-dence. For example, an extracted piece of evidence
-from an article may state: “Back then, just like
-today, home prices had boomed for years before
-Fed officials were ultimately forced to hike interest
-rates aggressively in an attempt to fight inflation.”
-Second, we input each evidence piece into GPT-4,
-prompting it to rephrase the evidence into a claim.
-This claim is clarified with a disambiguated topic
-and entity. For instance, GPT-4 might rephrase the
-aforementioned evidence into: “Federal Reserve
-officials were forced to aggressively hike interest
-rates to combat inflation after years of booming
-home prices”, identifying “Interest rate hikes to
-combat inflation” as the topic and “Federal Re-
-serve” as the entity. These topics and entities act as
-bridges for constructing multi-hop queries, known
-as bridge-topic or bridge-entity. Next, we use GPT-
-4 to generate specific multi-hop queries related to
-the same bridge-topic or bridge-entity, accompa-
-nied by the correct answers. Lastly, we undertake
-a validation step to ensure the data quality.
-We demonstrate the benchmarking capabilities
-of MultiHop-RAG using two experiments, utilizing
-a RAG system implemented with LlamaIndex (Liu,
-2022). The first experiment involves a comparison
-of different embedding models for retrieving rele-
-vant evidence for multi-hop queries. In the second
-experiment, we assess the reasoning and answering
-abilities of various state-of-the-art LLMs, including
-GPT-4, GPT-3.5, PaLM, Claude-2, Llama2-70B,
-and Mixtral-8x7B, for multi-hop queries when re-
-trieved text is provided. The results from both ex-
-periments indicate that the current RAG implemen-
-tations are inadequate for effectively retrieving and
-answering multi-hop queries. We publicly release
-================================================================================
-Title: Astute RAG: Overcoming Imperfect Retrieval Augmentation and Knowledge Conflicts for Large Language Models
-Authors: Fei Wang, Xingchen Wan, Ruoxi Sun, Jiefeng Chen, Sercan Ö. Arık
-Summary: Retrieval-Augmented Generation (RAG), while effective in integrating external
-knowledge to address the limitations of large language models (LLMs), can be
-undermined by imperfect retrieval, which may introduce irrelevant, misleading,
-or even malicious information. Despite its importance, previous studies have
-rarely explored the behavior of RAG through joint analysis on how errors from
-imperfect retrieval attribute and propagate, and how potential conflicts arise
-between the LLMs' internal knowledge and external sources. We find that
-imperfect retrieval augmentation might be inevitable and quite harmful, through
-controlled analysis under realistic conditions. We identify the knowledge
-conflicts between LLM-internal and external knowledge from retrieval as a
-bottleneck to overcome in the post-retrieval stage of RAG. To render LLMs
-resilient to imperfect retrieval, we propose Astute RAG, a novel RAG approach
-that adaptively elicits essential information from LLMs' internal knowledge,
-iteratively consolidates internal and external knowledge with source-awareness,
-and finalizes the answer according to information reliability. Our experiments
-using Gemini and Claude demonstrate that Astute RAG significantly outperforms
-previous robustness-enhanced RAG methods. Notably, Astute RAG is the only
-approach that matches or exceeds the performance of LLMs without RAG under
-worst-case scenarios. Further analysis reveals that Astute RAG effectively
-resolves knowledge conflicts, improving the reliability and trustworthiness of
-RAG systems.
-PDF Link: http://arxiv.org/pdf/2410.07176v1
-Extracted Content:
-Astute RAG : Overcoming Imperfect
-Retrieval Augmentation and Knowledge
-Conflicts for Large Language Models
-Fei Wang1 2 *, Xingchen Wan1, Ruoxi Sun1, Jiefeng Chen1and Sercan Ö. Arık1
-1Google Cloud AI Research,2University of Southern California
-Retrieval-Augmented Generation (RAG), while effective in integrating external knowledge to address
-the limitations of large language models (LLMs), can be undermined by imperfect retrieval, which may
-introduce irrelevant, misleading, or even malicious information. Despite its importance, previous studies
-have rarely explored the behavior of RAG through joint analysis on how errors from imperfect retrieval
-attribute and propagate, and how potential conflicts arise between the LLMs’ internal knowledge and
-external sources. We find that imperfect retrieval augmentation might be inevitable and quite harmful,
-through controlled analysis under realistic conditions. We identify the knowledge conflicts between LLM-
-internal and external knowledge from retrieval as a bottleneck to overcome in the post-retrieval stage of
-RAG. To render LLMs resilient to imperfect retrieval, we propose Astute RAG , a novel RAG approach
-thatadaptively elicits essential information from LLMs’ internal knowledge, iteratively consolidates
-internalandexternalknowledgewith source-awareness ,andfinalizestheansweraccordingtoinformation
-reliability. Our experiments using Gemini and Claude demonstrate that Astute RAG significantly
-outperforms previous robustness-enhanced RAG methods. Notably, Astute RAG is the only approach
-that matches or exceeds the performance of LLMs without RAG under worst-case scenarios. Further
-analysis reveals that Astute RAG effectively resolves knowledge conflicts, improving the reliability
-and trustworthiness of RAG systems.
+We show that the lambda-q calculus can eﬃciently simulate qu antum
+Turing machines by showing how the lambda-q calculus can eﬃc iently sim-
+ulate a class of quantum cellular automaton that are equival ent to quantum
+Turingmachines. Weconcludebynotingthatthelambda-qcal culusmaybe
+strictly stronger than quantum computers because NP-compl ete problems
+such as satisﬁability are eﬃciently solvable in the lambda- q calculus but
+there is a widespread doubt that they are eﬃciently solvable by quantum
+computers.
 1. Introduction
-Retrieval augmented generation (RAG) has become the standard approach for large language models
-(LLMs) to tackle knowledge-intensive tasks (Guu et al., 2020; Lewis et al., 2020). Prior works mainly
-leverage RAG to address the inherent knowledge limitations of LLMs, effectively integrating missing
-information and grounding to reliable sources. However, recent research has highlighted a significant
-drawback that RAG might rely on imperfect retrieval results, including irrelevant, misleading, or even
-malicious information, which eventually leads to inaccurate LLM responses (Chen et al., 2024a; Xiang
-et al., 2024; Zou et al., 2024). For example, when asked about the practice of eating rocks, LLMs
-might cite misleading information, such as a satirical news source claiming that one should consume
-at least one rock per day.1The occurrence of imperfect retrieval augmentation is inevitable, driven by
-factors such as corpus quality limitations (Shao et al., 2024), the reliability of retrievers (Dai et al.,
-2024), and the complexity of the queries (Su et al., 2024). This poses a significant challenge to the
-trustworthiness of RAG.
-While there have been independent analyses of information retrieval and RAG in the context of
-LLMs (Mallen et al., 2023; Su et al., 2024), previous studies have rarely connected the behaviors of
-retrieval and subsequent generation, particularly regarding the propagation of information retrieval
-errors,whichmayleadto knowledgeconflicts (Longpreetal.,2021;Wangetal.,2023a;Xuetal.,2024b)
-between LLMs and context. To this end, we conduct comprehensive analyses on the occurrence of
-1https://www.bbc.com/news/articles/cd11gzejgz4o .
-Corresponding author(s): fwang598@usc.edu, soarik@google.com
-* This work was done while Fei was a research intern at Google Cloud AI Research.arXiv:2410.07176v1  [cs.CL]  9 Oct 2024
-Astute RAG : Overcoming Imperfect Retrieval Augmentation and Knowledge Conflicts for Large Language Models
-Figure 1|Knowledge conflicts between the LLMs’ internal knowledge and retrieved knowledge from
-external sources. We report the overall results with Claude under the setting in Section 4.1.
-imperfectretrievalaugmentationanditsimpactonLLMbehaviorunderrealisticconditions(Section2).
-We conduct controlled experiments on a diverse range of general, domain-specific, and long-tail
-questions from NQ (Kwiatkowski et al., 2019), TriviaQA (Joshi et al., 2017), BioASQ (Tsatsaronis
-et al., 2015), and PopQA (Mallen et al., 2023). We observe that imperfect retrieval augmentation is
-widespread even with adept real-world search engine (such as Google Search with Web as corpus)
-– roughly 70% retrieved passages do not directly contain true answers, leading to the impeded
-performance of LLM with RAG augmentation.2
-These findings underscore the potential severity of the imperfect retrieval issue in real-world
-RAG and highlight the widespread existence of knowledge conflicts as the bottleneck to overcome
-it (Figure 1). Recent studies demonstrate that LLM-internal and external knowledge offer distinct
-advantages, but LLMs often struggle to consolidate conflicting information reliably, failing to respond
-based on collective knowledge (Jin et al., 2024; Mallen et al., 2023; Tan et al., 2024; Xie et al., 2024).
-This raises the following research question: Is there an effective method to combine internal (from LLMs’
-pretrained weights) and external (from specific corpora or knowledge bases) knowledge for more reliable
-RAG?Previous work has widely explored using external knowledge to enhance LLMs through RAG.
-We seek to further leverage LLMs’ internal knowledge to recover from RAG failures
-Motivated by these important real-world challenges, we propose Astute RAG (Section 3), a
-novel RAG approach designed to be resilient to imperfect retrieval augmentation, while preserving
-RAG grounding effect when RAG is reliable. To this end, Astute RAG needs effectively differentiate
-the reliability of the LLM’s intrinsic knowledge and the external information retrieved in RAG, utilizing
-each only when trustworthy and ensuring proper integration. Specifically, Astute RAG initially
-elicits information from LLMs’ internal knowledge to explicitly complement the passages retrieved
-from external sources. Then, Astute RAG conducts source-aware knowledge consolidation of
-information from various internal and external sources. The desiderata is combining consistent
-information, identifying conflicting information, and filtering out irrelevant information. Finally,
-Astute RAG proposes answers based on each group of consistent passages and compares the an-
-swers from different passage groups to determine the final answer. Our experiments involving Gemini
-and Claude3on various datasets (Section 4) demonstrate the superior performance of Astute RAG
-compared to previous RAG approaches designed to be robust against retrieval corruptions. Moreover,
-Astute RAG consistently outperforms baselines across different retrieval quality levels. Notably,
-2Note that some passages may contain information indirectly relevant to the answer, but may unintentionally mislead or
-distract LLMs.
-3https://www.anthropic.com/claude
+We show that the λq-calculus deﬁned in [1] can eﬃciently simulate the one-
+dimensional partitioned quantum cellular automata (1d-PQCA) deﬁned in [2]. By
+the equivalence of 1d-PQCA and quantum Turing machines (QTM) pro ved in [2],
+theλq-calculus can eﬃciently simulate QTM.
+We assume familiarity with both the λq-calculus and 1d-PQCA as deﬁned in
+the above papers.
+∗The author’s email address is pzmaymin@fas.harvard.edu .
+2. Simulation
+To show that 1d-PQCA can be eﬃciently simulated by the λq-calculus, we need
+to exhibit a λq-termMfor a given 1d-PQCA Asuch that Aafterksteps is in
+the same superposition as MafterP(k) steps, with Pa polynomial.
+We assume for now that the 1d-PQCA has transition amplitudes not o ver the
+complex numbers, but over the positive and negative rationals. It h as been shown
+[4] that this is equivalent to the general model in QTM.
+To express AinM, we need to do the following things.
+1. Translate states of Aintoλq-terms that can be compared (e.g. into Church
+numerals).
+2. Translate the acceptance states and the integer denoting the acceptance cell
+intoλq-terms.
+3. Create a λq-termPto mimic the operation of the permutation σ.
+4. Translate the local transition function into a transition term. Fo r 1d-PQCA
+thismeanstranslatingthematrixΛinto aterm Lcomparingtheinitialstate
+with each of the possible states andreturning the appropriatesup erposition.
+5. Determine an injective mapping of conﬁgurations of Aand conﬁgurations
+ofM.
+Although we will not write down Min full, we note that within Mare the
+mechanisms described above that take a single conﬁguration, apply P, and return
+the superposition as described by L.
+We recall that the contextual closure of the βq-relation is such that M,N→β
+M′,N′whereM→βM′andN→βN′.Thus there is parallel reduction within
+superpositions. By inspection of the mechanisms above it follows tha tksteps of
+Ais equivalent to a polynomial of ksteps ofM.
+Steps 1, 2, and 3 are easy. We will use the following abbreviatory not ation for
+λq-superpositions. We let [( Mi:ni)] be a rewriting of the term/bracketleftBig
+Ni∈I
+i/bracketrightBig
+such each
+of theMiare distinct and the integer nirepresents the count of each Mi.We can
+also write this as [( Mi:ai,bi,ni)] such that Mi/negationslash ≡MjandMi/negationslash ≡Mjfori/negationslash=j,all
+of theMiare of positive sign, the integer aidenotes the count of Mi,the integer
+bidenotes the count of Mi,andni=ai−bi.
 2
+================================================================================
+Title: Efficient and robust adiabatic universal quantum computation using STIRAP on a qubit chain
+Authors: Toshio Ohshima
+Summary: It is shown that efficient and robust universal quantum computation is
+possible using the stimulated Raman adiabatic passage with a qubit chain as a
+pointer register.
+PDF Link: http://arxiv.org/pdf/0806.4548v1
+Extracted Content:
+arXiv:0806.4548v1  [quant-ph]  27 Jun 2008Eﬃcient and robust adiabatic universal quantum computatio n using STIRAP on a
+qubit chain
+Toshio Ohshima1
+1Institute of Industrial Science, University of Tokyo,
+4-6-1 Komaba, Meguro-ku, Tokyo 153-8505 Japan.
+(Dated: Received: November 6, 2018)
+It is shown that eﬃcient and robust universal quantum comput ation is possible using the stimu-
+lated Raman adiabatic passage with a qubit chain as a pointer register.
+PACS numbers: 03.67.Lx,75.10.Pq
+A quantum computer (QC) can solve some class of
+problems more eﬃciently than any classical computers
+can, if we can implement reliable quantum gates and
+measurements physically. In general, quantum gates ro-
+tate state vectorsthrough someaxis by some angles. The
+direction of axis and the amount of angle is determined
+by external control signals. The requirements for the ac-
+curacy of control signals is very hard in order to fulﬁll
+the threshold criterion for fault-tolerant quantum com-
+putation.
+In ref [1], we proposed a robust method of state trans-
+fer and single qubit gate using adiabatic passage along
+spin chains [2, 3]. In this proposal, such quantum op-
+erations are done using counter-intuitive pulse sequence
+which couples neighboring spins. This technique is de-
+rivedfromatraditionalmethodofopticalpumpingcalled
+the stimulated Raman adiabatic passage(STIRAP). The
+ﬁdelity of operation can be made arbitrarily good by the
+proper preliminary calibration of coupling Hamiltonian.
+However, for universal quantum computation, two qubit
+gates must also be made robust. In this paper, we pro-
+poseanew methodfordoingarbitrarysequenceof(single
+or two qubit) quantum gates with robustness. The key
+ingredient is again the adiabatic passage. This method
+is basically a variation of the adiabatic quantum com-
+putation [4]. However, we must point out that it uses
+the zero energy dark state rather than the ground state.
+Of course in both cases adiabaticity requires that change
+of external parameters must be suﬃciently slow to mini-
+mize nonadiabatic transition from the eigenstate to near-
+est eigenstates [5]. However, in our scheme the energy
+gap between the dark state and neighboring states below
+and above scales 1/n, where n is the number of gates
+for computation. This means the computation time in-
+creasesonlylinearlywith the numberofgates. Ofcourse,
+the computation is deterministic. The concept of our
+method is suﬃciently general and can be implemented in
+various physical systems, e.g., optical lattices, supercon-
+ductors, and quantum dots. However, as an example, we
+describe an implementation using a system of spin 1/2.
+We deﬁne following Hamiltonian system which acts asQC.
+H(s) = (1−s)Hinit+sHfinal (1)
+Hinit=J(|n+2/angbracketrightc/angbracketleftn+1|+|n+1/angbracketrightc/angbracketleftn+2|)
++M(n/summationdisplay
+i=1Ui|i+1/angbracketrightc/angbracketlefti|+U+
+i|i/angbracketrightc/angbracketlefti+1|) (2)
+Hfinal=J(|1/angbracketrightc/angbracketleft0|+|0/angbracketrightc/angbracketleft1|)
++M(n/summationdisplay
+i=1Ui|i+1/angbracketrightc/angbracketlefti|+U+
+i|i/angbracketrightc/angbracketlefti+1|),(3)
+where subscript c stands for the state of the counter
+(qubit chain of length n+2) and Uiis i-th unitary gate of
+quantum computation on the N-qubit computation reg-
+ister. We make M much larger than J. Initial state (at
+s=0) of the QC is
+|s= 0/angbracketrightQC=|0/angbracketrightc|φ/angbracketrightr, (4)
+where|φ/angbracketrightris the state encoding the arbitrary input data
+of computation. We increases s from 0 to 1 slowly. The
+ﬁnal state (at s=1) is
+|s= 1/angbracketrightQC=|n+2/angbracketrightcn/productdisplay
+i=1Ui|φ/angbracketrightr (5)
+At the general value of s (0 < s <1), the state of QC
+is
+|s/angbracketrightQC= (1−s)J|0/angbracketrightc|φ/angbracketrightr
++J2
+Ms(1−s)n/2/summationdisplay
+i=1(−1)i|2i/angbracketrightc2i/productdisplay
+k=1Uk|φ/angbracketrightr
++sJ|n+2/angbracketrightcn/productdisplay
+k=1Uk|φ/angbracketrightr. (6)
+Note that we need to modulate the strength of cou-
+plings only for ﬁrst and last bonds of the counter chain.
+Compare above method with other schemes of QC with
+a counter [6, 7, 8, 9].
+All above results come from the adiabatic approxima-
+tion. The validity of the approximation requires that
+change of external parameter s must be slow and propor-
+tional to the energy gap. Contrary to the conventional
+2
+adiabatic quantum computations, relevant gaps are be-
+tweenzeroenergydarkstateandupperand lowernearest
+eigenstates. It is straightforward to obtain that the gap
+in our system to be inverseproportionalto the number of
+qubits in the counter chain and thus inverse proportional
+to the number of gates. The linear dependence of the
+gap on the inverse number of gates comes from the sine
+(or linear) dependence of eigenvalue of the Hamiltonian
+aroundzeroenergy. Ofcoursethere are2Ndegeneracyin
+which all possible register states belong to a same level
+of the counter among 2nlevels in total. However, this
+degeneracy does not contribute to the reduction of adi-
+abaticity. The advantage of this scheme is evident; (1)
+All unitary operations are embedded preliminarily in the
+designed Hamiltonian and do not suﬀer temporal ﬂuctu-
+ation which comes from noises in controller system. We
+need only to prepare accurate Hamiltonian and an ini-
+tial state. We can even calibrate Hamiltonian until it
+reaches a satisfactory level of accuracy. (2) Operation
+time is proportional to the number of gates, similar to
+standard quantum computation using circuit model. (3)
+After s has reached 1, answer can be obtained determin-
+istically by measuring the register at any time, since the
+amplitude of the state encoding correct answer is unity.
+There is no need of precise timing of measurement and
+the repetition of computation to get a correct answer.
+Next we describe the implementation of our scheme
+using spin degree of freedom. The QC is described by
+H(s) = (1−s)Hinit+sHfinal (7)
+Hinit=J
+2(Xn+2Xn+1+Yn+2Yn+1)c
++M
+2n/summationdisplay
+i=1[Hr,s
+i(XiXi+1+YiYi+1)c
++Hr,a
+i(XiYi+1−YiXi+1)c] (8)
+Hfinal=J
+2(X0X1+Y0Y1)c
++M
+2n/summationdisplay
+i=1[Hr,s
+i(XiXi+1+YiYi+1)c
++Hr,a
+i(XiYi+1−YiXi+1)c], (9)
+whereXi,Yi,Ziare Pauli spin matrices for i-th spin of
+the counter.
+ThesymmetricandantisymmetricpartofHamiltonian
+for the register are
+Hr,s
+i=1
+2(Ui+U+
+i) (10)
+Hr,a
+i=i
+2(Ui−U+
+i). (11)
+Forexample, Hamiltonianfortypicalandusefulquantumgates are
+Hs(Hadamard ) =1√
+2(X+Z), (12)
+Ha(Hadamard ) = 0, (13)
+Hs(π
+8) =1+√
+2
+2I+1−√
+2
+2Z, (14)
+Ha(π
+8) =1√
+2(Z−I), (15)
+Hs(Rn(θ)) =cosθ
+2I, (16)
+Hs(Rn(θ)) =sinθ
+2(nxX+nyY+nzZ),(17)
+Hs(CNOT) =I1I2+Z1I2+I1X2−Z1X2,(18)
+and
+Ha(CNOT) = 0. (19)
+Thus, we need four-spin interactions at most. A lim-
+iting case of interest is when M is larger than J in many
+ordersofmagnitude. Inthiscase,therecreatedalmostno
+amplitude on the intermediate qubits in the counter, and
+so in the intermediate circuit nodes of quantum compu-
+tation. This situationlooksasifquantumcomputationis
+performed without experiencing any intermediate states.
+We thank Akihito Soeda and Mio Murao for stimulat-
+ing discussion on this topic.
+[1] T. Ohshima, A. Ekert, D. K. L. Oi, D. Kaslizowski, and
+L. C. Kwek, quant-ph/0702019.
+[2] K. Eckert, O. Romero-Isart and A. Sanpera,
+quant-ph/0702082, as a relevant proposal.
+[3] For a comprehensive review on quantum communica-
+tion through spin chains, see Sougato Bose, quant-
+ph/0802.1224, and reference therein.
+[4] E. Farhi, J. Goldstone, S. Gutmann, and M. Sipser,
+quant-ph/0001106.
+[5] T. Kato, J. Phys. Soc. Jpn., 5, 435 (1951).
+[6] R. Feynman, Found Phys. 16, 507 (1986).
+[7] A. Kitaev, A. Shen, and M. Vyalyi, Classical and Quan-
+tum Computation, Number 47 in Graduate Series in
+Mathematics. AMS, Providence, RI, 2002.
+[8] D. Aharonov, W. van Dam, J. Kempe, Z. Landau, S.
+Lloyd, O. Regev, quant-ph/0405098.
+[9] S. Lloyd, quant-ph/0805 2757.
+================================================================================
+Title: Duality quantum computer and the efficient quantum simulations
+Authors: Shi-Jie Wei, Gui-Lu Long
+Summary: In this paper, we firstly briefly review the duality quantum computer.
+Distinctly, the generalized quantum gates, the basic evolution operators in a
+duality quantum computer are no longer unitary, and they can be expressed in
+terms of linear combinations of unitary operators. All linear bounded operators
+can be realized in a duality quantum computer, and unitary operators are just
+the extreme points of the set of generalized quantum gates. A d-slits duality
+quantum computer can be realized in an ordinary quantum computer with an
+additional qudit using the duality quantum computing mode. Duality quantum
+computer provides flexibility and clear physical picture in designing quantum
+algorithms, serving as a useful bridge between quantum and classical
+algorithms. In this review, we will show that duality quantum computer can
+simulate quantum systems more efficiently than ordinary quantum computers by
+providing descriptions of the recent efficient quantum simulation algorithms of
+Childs et al [Quantum Information & Computation, 12(11-12): 901-924 (2012)] for
+the fast simulation of quantum systems with a sparse Hamiltonian, and the
+quantum simulation algorithm by Berry et al [Phys. Rev. Lett. 114, 090502
+(2015)], which provides exponential improvement in precision for simulating
+systems with a sparse Hamiltonian.
+PDF Link: http://arxiv.org/pdf/1507.03200v1
+Extracted Content:
+arXiv:1507.03200v1  [quant-ph]  12 Jul 2015Submitted manuscript No.
+(will be inserted by the editor)
+Duality quantum computer and the eﬃcient
+quantum simulations
+Shi-Jie Wei ·Gui-Lu Long
+July 12, 2015
+Abstract In this paper, we ﬁrstly brieﬂy review the duality quantum com-
+puter. Distinctly, the generalized quantum gates, the basic evolut ion oper-
+ators in a duality quantum computer are no longer unitary, and they can
+be expressed in terms of linear combinations of unitary operators. All lin-
+ear bounded operators can be realized in a duality quantum compute r, and
+unitary operators are just the extreme points of the set of gene ralized quan-
+tum gates. A d-slits duality quantum computer can be realized in an or dinary
+quantum computer with an additional qudit using the duality quantum com-
+putingmode. Dualityquantumcomputerprovidesﬂexibilityandclearp hysical
+picture in designing quantum algorithms, serving as a useful bridge b etween
+quantum and classical algorithms. In this review, we will show that du ality
+quantum computer can simulate quantum systems more eﬃciently th an or-
+dinary quantum computers by providing descriptions of the recent eﬃcient
+quantum simulation algorithms of Childs et al [Quantum Information & C om-
+putation, 12(11-12): 901-924 (2012)] for the fast simulation of quantum sys-
+tems with a sparse Hamiltonian, and the quantum simulation algorithm b y
+Berry et al [Phys. Rev. Lett. 114, 090502 (2015)], which provides exponential
+improvement in precision for simulating systems with a sparse Hamilton ian.
+Project supported by the National Natural Science Foundati on of China (Grant Nos.
+11175094 and 91221205), the National Basic Research Progra m of China (2011CB9216002).
+Shi-Jie Wei ·Gui-Lu Long
+State Key Laboratory of Low-Dimensional Quantum Physics an d Department of Physics,
+Tsinghua University, Beijing 100084, China
+Gui-Lu Long
+Tsinghua National Laboratory for Information Science and T echnology, Beijing 100084,
+China
+Collaborative Innovation Center of Quantum Matter, Beijin g 100084, China
+E-mail: gllong@tsinghua.edu.cn
+2 Shi-Jie Wei, Gui-Lu Long
+Keywords Duality computer, duality quantum computer, duality computing
+mode, quantum divider, quantum combiner, duality parallelism, quant um
+simulation, linear combination of unitary operators
+PACS03.65.-w, 03.67.-a, 03.75.-b
+1 Introduction
+One of us, Long, came to know Dr. Brandt ﬁrst through his importa nt works
+in quantum information [1,2,3,4,5,6,7,8,9] and later his role as ed itor-in-chief
+of the journal Quantum Information Processing(QIP). Long pro posed a new
+type of quantum computer in 2002 [10], which employed the wave-pa rticle du-
+ality principle to quantum information processing. His acquaintance w ith QIP
+began in 2006 through the work of Stan Gudder who established the math-
+ematical theory of duality quantum computer [11], which was accomp anied
+by a diﬀerent mathematical description of duality quantum compute r in the
+density matrix formalism [12]. The development of duality quantum co mputer
+owes a great deal to QIP ﬁrst in the term of Dr. David Cory as editor -in-chief,
+and then the term of Dr. H. E. Brandt as the editor-in-chief. For e xample, the
+zero-wave function paradox was pointed out ﬁrstly by Gudder [11], and two
+possible solutions were given in Refs. [13] and [14]. Long has actively p artici-
+patedintheworkofQIPasareviewerwhenDr.Brandtwastheedito r-in-chief,
+and as a member of the editorial board from 2014. At this special oc casion,
+it is our great honor to present a survey of the duality quantum com puter in
+this special issue dedicated to the memory of Dr. Howard E. Brandt .
+As is well-known, a moving quantum object passing through a double-
+slit behaves like both waves and particles. The duality computer, or d uality
+quantum computer exploits the wave-particleduality ofquantum sy stems [10].
+It has been proven that a moving n-qubit duality computer passing through
+ad-slits can be perfectly simulated by an ordinary quantum computer w ith
+n-qubit and an additional dlevels qudit [15,16,17]. So we do not need to build
+a moving quantum computer device which is very diﬃcult to realize. This
+also indicates that we can perform duality quantum computing in an or dinary
+quantum computer, in the so-called duality quantum computing mode [16,17].
+There have been intensive interests in the theory of duality comput er in recent
+years [10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,2 5,26,27,28,29,30], and
+experimental studies have also been reported [31,32].
+This articleis organizedas follows.In section 2, we brieﬂy describeth e gen-
+eralized quantum gate, the divider and combiner operations. Sectio n 3 reviews
+the duality quantum computing mode, which enables the implementatio n of
+dualityquantumcomputinginanordinaryquantumcomputer.Insec tion4,we
+outline the main results of mathematical theory of duality quantum c omputer.
+In section 5, we give the duality quantum computer description of th e work of
+Childs et al [33] which simulates a quantum system with sparse Hamilton ian
+eﬃciently. In section 6, we give the duality quantum computer descr iption of
+the work of Berry et al [34] which simulates a quantum system having a sparse
+================================================================================
+Title: Quantum Computational Complexity
+Authors: John Watrous
+Summary: This article surveys quantum computational complexity, with a focus on three
+fundamental notions: polynomial-time quantum computations, the efficient
+verification of quantum proofs, and quantum interactive proof systems.
+Properties of quantum complexity classes based on these notions, such as BQP,
+QMA, and QIP, are presented. Other topics in quantum complexity, including
+quantum advice, space-bounded quantum computation, and bounded-depth quantum
+circuits, are also discussed.
+PDF Link: http://arxiv.org/pdf/0804.3401v1
+Extracted Content:
+arXiv:0804.3401v1  [quant-ph]  21 Apr 2008Quantum Computational Complexity
+John Watrous
+Institute for Quantum Computing and School of Computer Scie nce
+University of Waterloo, Waterloo, Ontario, Canada.
+Article outline
+I. Deﬁnition of the subject and its importance
+II. Introduction
+III. The quantum circuit model
+IV . Polynomial-time quantum computations
+V . Quantum proofs
+VI. Quantum interactive proof systems
+VII. Other selected notions in quantum complexity
+VIII. Future directions
+IX. References
+Glossary
+Quantum circuit.
+A quantum circuit is an acyclic network of quantum gates conn ected by wires: the gates represent
+quantum operations and the wires represent the qubits on whi ch these operations are performed.
+The quantum circuit model is the most commonly studied model of quantum computation.
+Quantum complexity class.
+A quantum complexity class is a collection of computational problems that are solvable by a cho-
+sen quantum computational model that obeys certain resourc e constraints. For example, BQP is
+the quantum complexity class of all decision problems that c an be solved in polynomial time by a
+quantum computer.
+Quantum proof.
+A quantum proof is a quantum state that plays the role of a witn ess or certiﬁcate to a quan-
+tum computer that runs a veriﬁcation procedure. The quantum c omplexity class QMA is deﬁned
+by this notion: it includes all decision problems whose yes- instances are efﬁciently veriﬁable by
+means of quantum proofs.
+Quantum interactive proof system.
+A quantum interactive proof system is an interaction betwee n a veriﬁer and one or more provers,
+involving the processing and exchange of quantum informati on, whereby the provers attempt to
+convince the veriﬁer of the answer to some computational prob lem.
+1
+I Deﬁnition of the subject and its importance
+The inherent difﬁculty, or hardness , of computational problems is a fundamental concept in com-
+putational complexity theory. Hardness is typically forma lized in terms of the resources required
+by different models of computation to solve a given problem, such as the number of steps of a
+deterministic Turing machine. A variety of models and resou rces are often considered, including
+deterministic, nondeterministic and probabilistic model s; time and space constraints; and inter-
+actions among models of differing abilities. Many interesti ng relationships among these different
+models and resource constraints are known.
+One common feature of the most commonly studied computation al models and resource con-
+straint is that they are physically motivated . This is quite natural, given that computers are physical
+devices, and to a signiﬁcant extent it is their study that moti vates and directs research on compu-
+tational complexity. The predominant example is the class o f polynomial-time computable func-
+tions, which ultimately derives its relevance from physica l considerations; for it is a mathematical
+abstraction of the class of functions that can be efﬁciently c omputed without error by physical
+computing devices.
+In light of its close connection to the physical world, it see ms only natural that modern physical
+theories should be considered in the context of computation al complexity. In particular, quantum
+mechanics is a clear candidate for a physical theory to have the potenti al for implications, if not to
+computational complexity then at least to computation more generally. Given the steady decrease
+in the size of computing components, it is inevitable that qu antum mechanics will become increas-
+ingly relevant to the construction of computers—for quantu m mechanics provides a remarkably
+accurate description of extremely small physical systems ( on the scale of atoms) where classical
+physical theories have failed completely. Indeed, an extra polation of Moore’s Law predicts sub-
+atomic computing components within the next two decades [83 , 78]; a possibility inconsistent with
+quantum mechanics as it is currently understood.
+That quantum mechanics should have implications to computa tional complexity theory, how-
+ever, is much less clear. It is only through the remarkable di scoveries and ideas of several re-
+searchers, including Richard Feynman [50], David Deutsch [ 41, 42], Ethan Bernstein and Umesh
+Vazirani [30, 31], and Peter Shor [93, 94], that this potenti al has become evident. In particular,
+Shor’s polynomial-time quantum factoring and discrete-lo garithm algorithms [94] give strong
+support to the conjecture that quantum and classical comput ers yield differing notions of compu-
+tational hardness. Other quantum complexity-theoretic co ncepts, such as the efﬁcient veriﬁcation
+of quantum proofs, suggest a wider extent to which quantum me chanics inﬂuences computational
+complexity.
+It may be said that the principal aim of quantum computationa l complexity theory is to un-
+derstand the implications of quantum physics to computatio nal complexity theory. To this end, it
+considers the hardness of computational problems with resp ect to models of quantum computa-
+tion, classiﬁcations of problems based on these models, and t heir relationships to classical models
+and complexity classes.
+II Introduction
+This article surveys quantum computational complexity, wi th a focus on three fundamental no-
+tions: polynomial-time quantum computations, the efﬁcient veriﬁcation of quantum proofs, and
+quantum interactive proof systems. Based on these notions o ne deﬁnes quantum complexity
+classes, such as BQP, QMA, and QIP, that contain computationa l problems of varying hardness.
+2
+================================================================================
+Title: Quantum memristors for neuromorphic quantum machine learning
+Authors: Lucas Lamata
+Summary: Quantum machine learning may permit to realize more efficient machine
+learning calculations with near-term quantum devices. Among the diverse quantum
+machine learning paradigms which are currently being considered, quantum
+memristors are promising as a way of combining, in the same quantum hardware, a
+unitary evolution with the nonlinearity provided by the measurement and
+feedforward. Thus, an efficient way of deploying neuromorphic quantum computing
+for quantum machine learning may be enabled.
+PDF Link: http://arxiv.org/pdf/2412.18979v1
+Extracted Content:
+Quantum memristors for neuromorphic quantum machine learning  
+ 
+Lucas Lamata  
+Departamento de Física Atómica, Molecular, y Nuclear, Facultad de Física, Universidad 
+de Sevilla, Apartado 1065, E -41080 Sevilla, Spain  
+Email Address: llamata@us.es  
+Quantum machine learning may permit to realize more efficient machine learning 
+calculations with near -term quantum devices. Among the diverse quantum machine 
+learning paradigms which are currently being considered, quantum memristors are 
+promising as a way  of combining, in the same quantum hardware, a unitary evolution 
+with the nonlinearity provided by the measurement and feedforward. Thus, an efficient 
+way of deploying neuromorphic quantum computing for quantum machine learning may 
+be enabled.  
+ 
+Introduction  
+ 
+Quantum machine learning is an emerging field inside quantum technologies, which may 
+enable to carry out more efficient machine learning calculations with near -term 
+quantum devices  [1-4]. It is apparent that a purely quantum unitary evolution is not 
+enough for an efficient learning process, which implies irreversibility to some extent  [1,2] . 
+Therefore, most quantum learning algorithms imply some variant of the so -called 
+quantum -classical protocols, such as variational quantum  eigensolvers  [5-7], quantum 
+Boltzmann machines  [8], quantum approximate optimization algorithms  [9], and 
+quantum reinforcement learning protocols  [10-14]. Besides the basic digital quant um 
+circuit model, all these algorithms include quantum measurements and feedforward in 
+some part of the execution , with subsequent further unitary evolution, further classical 
+part, and so on.  Usually, one considers a universal quantum computer based on the 
+digital paradigm for carrying out all these quantum algorithms. However, it may be 
+sensible to employ specialized quantum har dware , which incorporates ab  initio both the 
+unitary evolution and the quantum measurement part in the same building block. This is 
+what a quantum memristor [15] may  enable.  
+ 
+A quantum memristor [16-20] is a quantum device that is composed of a two -
+dimensional quantum system, in the most basic instances, together  with a weak 
+measurement and feedforward, in the same basic unit. Its properties are that it can 
+sustain a unitary evoluti on, and in the classical limit it behaves with a hysteresis 
+dynamics, such as a classical memristor  [21] . Several of these units may be coupled 
+together  to form a network of quantum memristors  [22,23], which may be regarded as a 
+neuromorphic quantum architecture.  Even though it is not obvious at first sight that this 
+quantum paradigm may carry out more efficient quantum computing p rotocols than 
+other architectures , it has the basic ingredients of unitary evolution, nonlinearity 
+provided by the measurement, and a scalable architecture. Therefore, quantum 
+memristors could be useful bricks for quantum machine le arning devices.  
+  
+Quantum memristors for neuromorphic quantum machine learning  
+Machine learning aims at having a computing device that can acquire information from 
+the outer world, so called environment, and use that information to improve its 
+performance for some task, in each iteration  [24] . This is referred to as  learning from the 
+environment. The idea is that interacting with the external world in successive steps, may 
+enabl e the machine to improve  its behaviour for the desired task , sometimes even at 
+superhuman level  [25] . Even though classical machine learning already works extremely 
+well, which is evidenced in the multiple daily life applications we enjoy, it is true that 
+processing an increasing amount of data with algo rithms that do not scale optimally for 
+this information size is posing a difficulty both in terms of resources and energy 
+consumption. Quantum compu ters may be a way forward to scale up machine learning 
+computations due to the quantum parallelism, quantum speedup at least for certain 
+kinds of problems, and more efficient energy use in the computing process.  However, it 
+is not obvious at first sight which , if any,  of the multiple proposed quantum machine 
+learning algorithms may be useful in the short or mid -term  for carrying out tasks in better 
+or at least complementary ways to existing classical machine learning protocols.  
+ 
+Some of the quantum machine learning protocols rely on the good connection of 
+quantum systems to linear algebra, via, e.g., the quantum phase estimation algorithm, 
+efficient distance computations, etc  [2]. This kind of algorithms normally rely on a single 
+quantum evolution followed by a final measurement. However, they often require a very 
+large number of qubits which is not accesible today or in the near future. Other kinds of 
+quantum machine learning protocols, which have less rigorous evidence of speedup , but 
+nevertheless may be carried out with noisy intermediate -scale quantum computers, are 
+included in the paradigm of classical -quantum protocols. This consists  of an iteration of 
+several instances of quantum evolution followed by a measurement, where the 
+subsequent quantum evolution depends on the outcome of the previous measurement, 
+via feedforward . This includes variational quantum eigensolvers, quantum Boltzmann
 ================================================================================
