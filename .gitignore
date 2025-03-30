@@ -51,10 +51,10 @@ next-env.d.ts
 /backend/myenv
 
 # === Docker ===
-/backend/.dockerignore
-/backend/Dockerfile
-/backend/docker-compose.yml
-/backend/.env.docker
+# /backend/.dockerignore
+# /backend/Dockerfile
+# /backend/docker-compose.yml
+# /backend/.env.docker
 
 # === Virtual Environments ===
 /venv/

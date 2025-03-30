@@ -3,7 +3,15 @@ import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { Copy, Download } from "lucide-react";
 
-export default function Response({ markdown }) {
+declare global {
+  interface Window {
+    marked: {
+      parse: (markdown: string) => string;
+    };
+  }
+}
+
+export default function Response({ markdown }: { markdown: string }) {
   const [html, setHtml] = useState("");
 
   useEffect(() => {
