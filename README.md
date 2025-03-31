@@ -1,5 +1,8 @@
 # IRIS-LLM
 
+> [!NOTE]  
+> Still in active development. Contributions are welcomed.This is a very basic project.  
+
 ## Overview
 
 **IRIS-LLM** is an **AI-driven knowledge curation system** that researches topics, extracts relevant information from various sources, and generates **comprehensive, well-structured reports with citations**. Built using **FastAPI** and **Ollama**, IRIS-LLM automates the process of gathering, synthesizing, and presenting information in a structured format, making it an invaluable tool for researchers, students, and professionals.
