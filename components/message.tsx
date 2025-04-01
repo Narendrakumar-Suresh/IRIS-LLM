@@ -6,6 +6,17 @@ import { SendHorizontal, Loader } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import Response from "./response";
 import axios from "axios";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface Message {
   text: string;
@@ -15,7 +26,8 @@ interface Message {
 export default function Messenger() {
   const [value, setValue] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(false); // Loading state for API calls
+  const [loading, setLoading] = useState(false);
+  const [alertOpen, setAlertOpen] = useState(false); // Track AlertDialog state
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const sendHandler = async () => {
@@ -24,21 +36,19 @@ export default function Messenger() {
       return;
     }
 
-    // Add user message
     setMessages((prevMessages) => [
       ...prevMessages,
       { text: value, sender: "user" },
     ]);
 
-    setValue(""); // Clear input
-    setLoading(true); // Start loading
+    setValue("");
+    setLoading(true);
+    setAlertOpen(true); // Show alert when request starts
 
     try {
       const response = await axios.post(
         "http://127.0.0.1:8000/prepare-paper",
-        {
-          query: value, // Fixed API payload
-        },
+        { query: value },
         { headers: { "Content-Type": "application/json" } }
       );
 
@@ -50,7 +60,8 @@ export default function Messenger() {
       console.error("Error fetching response:", error);
       alert("Failed to get a response from the server.");
     } finally {
-      setLoading(false); // Stop loading
+      setLoading(false);
+      setAlertOpen(false); // Hide alert once loading is done
     }
   };
 
@@ -93,15 +104,23 @@ export default function Messenger() {
           className="h-12 w-12 rounded-full"
           variant="outline"
           onClick={sendHandler}
-          disabled={loading} // Disable button while loading
+          disabled={loading}
         >
-          {loading ? (
-            <Loader className="motion-preset-spin" />
-          ) : (
-            <SendHorizontal />
-          )}
+          {loading ? <Loader className="animate-spin" /> : <SendHorizontal />}
         </Button>
       </div>
+
+      {/* Alert Dialog */}
+      <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Be Ready!!!</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your work is getting ready!
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
