@@ -43,13 +43,9 @@ export default function Home() {
             </Link>
           </nav>
           <div className="flex items-center gap-4">
-            <Link
-              href="#"
-              className="hidden sm:inline-flex text-sm font-medium text-gray-700 hover:text-gray-800 transition-colors"
-            >
-              Log in
-            </Link>
-            <Button className="bg-black hover:bg-gray-800">Get Started</Button>
+            <Button asChild className="bg-black hover:bg-gray-800">
+              <Link href="/chat">Get started</Link>
+            </Button>
           </div>
         </div>
       </header>
@@ -59,7 +55,7 @@ export default function Home() {
             <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_500px]">
               <div className="flex flex-col justify-center space-y-4">
                 <div className="inline-block rounded-lg bg-gray-100 px-3 py-1 text-sm text-black">
-                  Inspired by Stanford's STORM
+                  Inspired by Stanford&aposs STORM
                 </div>
                 <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none">
                   AI-Powered Research Assistant with Comprehensive Citations
@@ -128,11 +124,11 @@ export default function Home() {
                           Citations
                         </div>
                         <div className="text-xs text-gray-600">
-                          [1] Porter, J.R. et al. (2023). "Climate Change
-                          Effects on Global Agriculture"
+                          [1] Porter, J.R. et al. (2023). &quotClimate Change
+                          Effects on Global Agriculture&quot
                           <br />
-                          [2] Zhang, M. & Williams, K. (2022). "Adaptation
-                          Strategies for Agricultural Resilience"
+                          [2] Zhang, M. & Williams, K. (2022). &quotAdaptation
+                          Strategies for Agricultural Resilience &quot
                         </div>
                       </div>
                     </div>
@@ -252,8 +248,8 @@ export default function Home() {
                 </p>
                 <div className="mt-4 w-full rounded-lg border bg-gray-50 p-3">
                   <div className="text-sm text-gray-700">
-                    "Analyze the impact of remote work on employee productivity
-                    and mental health since 2020"
+                    &quot Analyze the impact of remote work on employee
+                    productivity and mental health since 2020 &quot
                   </div>
                 </div>
               </div>
@@ -406,9 +402,10 @@ export default function Home() {
                     ))}
                   </div>
                   <blockquote className="mt-4 text-gray-500">
-                    "IRIS-LLM cut my literature review time by 70%. The
+                    &quot IRIS-LLM cut my literature review time by 70%. The
                     citations were impeccable, and the synthesis of information
-                    was better than what I could have done manually in weeks."
+                    was better than what I could have done manually in weeks.
+                    &quot
                   </blockquote>
                 </div>
                 <div className="flex items-center gap-4">
@@ -449,10 +446,10 @@ export default function Home() {
                     ))}
                   </div>
                   <blockquote className="mt-4 text-gray-500">
-                    "As a journalist covering complex scientific topics,
+                    &quot As a journalist covering complex scientific topics,
                     IRIS-LLM has been invaluable. It helps me quickly understand
-                    the research landscape and ensures I'm not missing critical
-                    studies."
+                    the research landscape and ensures I&aposm not missing
+                    critical studies. &quot
                   </blockquote>
                 </div>
                 <div className="flex items-center gap-4">
@@ -493,10 +490,10 @@ export default function Home() {
                     ))}
                   </div>
                   <blockquote className="mt-4 text-gray-500">
-                    "My dissertation research would have taken months longer
-                    without IRIS-LLM. It found connections between studies I
-                    might have missed and saved me countless hours of manual
-                    searching."
+                    &quot My dissertation research would have taken months
+                    longer without IRIS-LLM. It found connections between
+                    studies I might have missed and saved me countless hours of
+                    manual searching.&quot
                   </blockquote>
                 </div>
                 <div className="flex items-center gap-4">
@@ -722,7 +719,7 @@ export default function Home() {
               © {new Date().getFullYear()} IRIS-LLM. All rights reserved.
             </p>
             <p className="text-center text-sm text-gray-500 md:text-left">
-              Inspired by Stanford's STORM research assistant.
+              Inspired by Stanford&aposs STORM research assistant.
             </p>
           </div>
         </div>
