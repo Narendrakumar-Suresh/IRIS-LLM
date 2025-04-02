@@ -1,118 +1,65 @@
-# IRIS-LLM
-
-> [!WARNING]  
-> Still in active development. Contributions are welcomed.This is a very basic project.  
-
-## Overview
-
-**IRIS-LLM** is an **AI-driven knowledge curation system** that researches topics, extracts relevant information from various sources, and generates **comprehensive, well-structured reports with citations**. Built using **FastAPI** and **Ollama**, IRIS-LLM automates the process of gathering, synthesizing, and presenting information in a structured format, making it an invaluable tool for researchers, students, and professionals.
-
-### 🔹 Key Capabilities:
-✅ **Automated Research** – Collects and processes data from various sources.  
-✅ **Report Generation** – Produces well-organized, full-length reports.  
-✅ **Citations & References** – Ensures credibility with properly formatted citations.  
-✅ **Customizable Output** – Tailors reports based on user preferences.  
-✅ **Scalable API** – Easily integrates with existing systems for automated content generation.  
+Your README is well-structured and informative, but it can be simplified while keeping the essential details. The Docker Hub link is useful if users need to pull your images easily, so it's good to include it. Here's a more concise version:  
 
 ---
 
-## Use Cases
+# IRIS-LLM  
 
-IRIS-LLM is ideal for:
+> 🚧 **Active Development** – Contributions are welcome!  
 
-- 📚 **Academic Research** – Automates literature reviews and knowledge synthesis.
-- 🏛 **Policy & Legal Analysis** – Generates well-cited reports for policy development.
-- 🔬 **Scientific Summaries** – Condenses complex topics into accessible reports.
-- 💼 **Market & Competitive Analysis** – Extracts trends and insights from industry data.
-- 📰 **Automated Journalism** – Creates articles based on factual data.
+## Overview  
 
----
+**IRIS-LLM** is an **AI-powered research assistant** that gathers and synthesizes information into well-structured reports with citations. Designed for researchers, students, and professionals, it automates literature reviews, policy analysis, and content generation.  
 
-## System Architecture
-
-- **Research Module** – Gathers relevant data from web sources, databases, and documents.
-- **LLM Processing** – Uses large language models to analyze and synthesize information.
-- **Report Generator** – Structures findings into a human-readable document.
-- **Citation Engine** – Ensures accuracy with properly formatted references.
+### 🔹 Features  
+✅ **Automated Research** – Collects and processes data from various sources  
+✅ **Report Generation** – Creates structured, citation-backed reports  
+✅ **Customizable Output** – Tailors content based on user preferences  
+✅ **API-First** – Easily integrates into other applications  
 
 ---
 
-## Getting Started
+## 🚀 Getting Started  
 
-### 1️⃣ Clone the Repository
+### 1️⃣ Clone the Repository  
 ```sh
 git clone https://github.com/yourusername/IRIS-LLM.git
 cd IRIS-LLM/backend
-```
+```  
 
-### 2️⃣ Set Up a Virtual Environment
+### 2️⃣ Install Dependencies  
 ```sh
-python -m venv myenv
-```
+python -m venv myenv  
+source myenv/bin/activate  # Windows: myenv\Scripts\Activate  
+pip install -r requirements.txt  
+```  
 
-### 3️⃣ Activate the Virtual Environment
-#### Windows (PowerShell)
+### 3️⃣ Run the API Server  
 ```sh
-myenv\Scripts\Activate
-```
-#### Mac/Linux
-```sh
-source myenv/bin/activate
-```
-
-### 4️⃣ Install Dependencies
-```sh
-pip install --upgrade pip
-pip install ollama fastapi uvicorn ruff
-```
+uvicorn main:app --reload  
+```  
+- API: **http://127.0.0.1:8000**  
+- Docs: **http://127.0.0.1:8000/docs**  
 
 ---
 
-## Running the Server
+## 🐳 Docker Support  
 
-To start the IRIS-LLM API server, run:
+Pull the latest image from Docker Hub:  
 ```sh
-uvicorn main:app --reload
-```
-- API available at: **http://127.0.0.1:8000**
-- Interactive API Docs: **http://127.0.0.1:8000/docs**
+docker pull narendrakumar12/iris-llm:latest  
+```  
+[**Docker Hub Repo →**](https://hub.docker.com/repository/docker/narendrakumar12/iris-llm/general)  
 
 ---
 
-## Example API Usage
-
-### Generate a Research Report
-
-#### **Request**
-```sh
-POST /generate-report
-{
-  "topic": "Impact of AI on Climate Change",
-  "sources": ["web", "papers"],
-  "format": "APA"
-}
-```
-
-#### **Response (Excerpt)**
-```json
-{
-  "title": "The Impact of AI on Climate Change",
-  "content": "Artificial Intelligence (AI) has the potential to significantly contribute to climate change mitigation through predictive analytics and optimization...",
-  "citations": [
-    "[1] Smith, J. (2023). AI and Climate Change. Journal of Sustainability.",
-    "[2] United Nations Report on AI in Energy Efficiency (2022)."
-  ]
-}
-```
-
----
-
-## Future Roadmap
+## 🔮 Roadmap  
 
 - ✅ Research automation with LLM  
-- ✅ report can be exported as text file.
-- 🔜 Multi-source citation support (books, research papers, verified web sources)  
-- 🔜 Interactive user interface for report generation  
+- ✅ Report export as a text file  
+- 🔜 Multi-source citation support  
 - 🔜 AI-driven summarization & bias detection  
+- 🔜 Web-based UI for easy access
+- 🔜 Multiple model access
+- 🔜 Memory access with storage
 
-
+---
