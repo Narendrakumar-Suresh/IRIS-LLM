@@ -1,6 +1,6 @@
 # IRIS-LLM
 
-> [!NOTE]  
+> [!WARNING]  
 > Still in active development. Contributions are welcomed.This is a very basic project.  
 
 ## Overview
