@@ -776,108 +776,101 @@ periments indicate that the current RAG implemen-
 tations are inadequate for effectively retrieving and
 answering multi-hop queries. We publicly release
 ================================================================================
-Title: Astute RAG: Overcoming Imperfect Retrieval Augmentation and Knowledge Conflicts for Large Language Models
-Authors: Fei Wang, Xingchen Wan, Ruoxi Sun, Jiefeng Chen, Sercan Ö. Arık
-Summary: Retrieval-Augmented Generation (RAG), while effective in integrating external
-knowledge to address the limitations of large language models (LLMs), can be
-undermined by imperfect retrieval, which may introduce irrelevant, misleading,
-or even malicious information. Despite its importance, previous studies have
-rarely explored the behavior of RAG through joint analysis on how errors from
-imperfect retrieval attribute and propagate, and how potential conflicts arise
-between the LLMs' internal knowledge and external sources. We find that
-imperfect retrieval augmentation might be inevitable and quite harmful, through
-controlled analysis under realistic conditions. We identify the knowledge
-conflicts between LLM-internal and external knowledge from retrieval as a
-bottleneck to overcome in the post-retrieval stage of RAG. To render LLMs
-resilient to imperfect retrieval, we propose Astute RAG, a novel RAG approach
-that adaptively elicits essential information from LLMs' internal knowledge,
-iteratively consolidates internal and external knowledge with source-awareness,
-and finalizes the answer according to information reliability. Our experiments
-using Gemini and Claude demonstrate that Astute RAG significantly outperforms
-previous robustness-enhanced RAG methods. Notably, Astute RAG is the only
-approach that matches or exceeds the performance of LLMs without RAG under
-worst-case scenarios. Further analysis reveals that Astute RAG effectively
-resolves knowledge conflicts, improving the reliability and trustworthiness of
-RAG systems.
-PDF Link: http://arxiv.org/pdf/2410.07176v1
+Title: Hyper-RAG: Combating LLM Hallucinations using Hypergraph-Driven Retrieval-Augmented Generation
+Authors: Yifan Feng, Hao Hu, Xingliang Hou, Shiquan Liu, Shihui Ying, Shaoyi Du, Han Hu, Yue Gao
+Summary: Large language models (LLMs) have transformed various sectors, including
+education, finance, and medicine, by enhancing content generation and
+decision-making processes. However, their integration into the medical field is
+cautious due to hallucinations, instances where generated content deviates from
+factual accuracy, potentially leading to adverse outcomes. To address this, we
+introduce Hyper-RAG, a hypergraph-driven Retrieval-Augmented Generation method
+that comprehensively captures both pairwise and beyond-pairwise correlations in
+domain-specific knowledge, thereby mitigating hallucinations. Experiments on
+the NeurologyCrop dataset with six prominent LLMs demonstrated that Hyper-RAG
+improves accuracy by an average of 12.3% over direct LLM use and outperforms
+Graph RAG and Light RAG by 6.3% and 6.0%, respectively. Additionally, Hyper-RAG
+maintained stable performance with increasing query complexity, unlike existing
+methods which declined. Further validation across nine diverse datasets showed
+a 35.5% performance improvement over Light RAG using a selection-based
+assessment. The lightweight variant, Hyper-RAG-Lite, achieved twice the
+retrieval speed and a 3.3% performance boost compared with Light RAG. These
+results confirm Hyper-RAG's effectiveness in enhancing LLM reliability and
+reducing hallucinations, making it a robust solution for high-stakes
+applications like medical diagnostics.
+PDF Link: http://arxiv.org/pdf/2504.08758v1
 Extracted Content:
-Astute RAG : Overcoming Imperfect
-Retrieval Augmentation and Knowledge
-Conflicts for Large Language Models
-Fei Wang1 2 *, Xingchen Wan1, Ruoxi Sun1, Jiefeng Chen1and Sercan Ö. Arık1
-1Google Cloud AI Research,2University of Southern California
-Retrieval-Augmented Generation (RAG), while effective in integrating external knowledge to address
-the limitations of large language models (LLMs), can be undermined by imperfect retrieval, which may
-introduce irrelevant, misleading, or even malicious information. Despite its importance, previous studies
-have rarely explored the behavior of RAG through joint analysis on how errors from imperfect retrieval
-attribute and propagate, and how potential conflicts arise between the LLMs’ internal knowledge and
-external sources. We find that imperfect retrieval augmentation might be inevitable and quite harmful,
-through controlled analysis under realistic conditions. We identify the knowledge conflicts between LLM-
-internal and external knowledge from retrieval as a bottleneck to overcome in the post-retrieval stage of
-RAG. To render LLMs resilient to imperfect retrieval, we propose Astute RAG , a novel RAG approach
-thatadaptively elicits essential information from LLMs’ internal knowledge, iteratively consolidates
-internalandexternalknowledgewith source-awareness ,andfinalizestheansweraccordingtoinformation
-reliability. Our experiments using Gemini and Claude demonstrate that Astute RAG significantly
-outperforms previous robustness-enhanced RAG methods. Notably, Astute RAG is the only approach
-that matches or exceeds the performance of LLMs without RAG under worst-case scenarios. Further
-analysis reveals that Astute RAG effectively resolves knowledge conflicts, improving the reliability
-and trustworthiness of RAG systems.
-1. Introduction
-Retrieval augmented generation (RAG) has become the standard approach for large language models
-(LLMs) to tackle knowledge-intensive tasks (Guu et al., 2020; Lewis et al., 2020). Prior works mainly
-leverage RAG to address the inherent knowledge limitations of LLMs, effectively integrating missing
-information and grounding to reliable sources. However, recent research has highlighted a significant
-drawback that RAG might rely on imperfect retrieval results, including irrelevant, misleading, or even
-malicious information, which eventually leads to inaccurate LLM responses (Chen et al., 2024a; Xiang
-et al., 2024; Zou et al., 2024). For example, when asked about the practice of eating rocks, LLMs
-might cite misleading information, such as a satirical news source claiming that one should consume
-at least one rock per day.1The occurrence of imperfect retrieval augmentation is inevitable, driven by
-factors such as corpus quality limitations (Shao et al., 2024), the reliability of retrievers (Dai et al.,
-2024), and the complexity of the queries (Su et al., 2024). This poses a significant challenge to the
-trustworthiness of RAG.
-While there have been independent analyses of information retrieval and RAG in the context of
-LLMs (Mallen et al., 2023; Su et al., 2024), previous studies have rarely connected the behaviors of
-retrieval and subsequent generation, particularly regarding the propagation of information retrieval
-errors,whichmayleadto knowledgeconflicts (Longpreetal.,2021;Wangetal.,2023a;Xuetal.,2024b)
-between LLMs and context. To this end, we conduct comprehensive analyses on the occurrence of
-1https://www.bbc.com/news/articles/cd11gzejgz4o .
-Corresponding author(s): fwang598@usc.edu, soarik@google.com
-* This work was done while Fei was a research intern at Google Cloud AI Research.arXiv:2410.07176v1  [cs.CL]  9 Oct 2024
-Astute RAG : Overcoming Imperfect Retrieval Augmentation and Knowledge Conflicts for Large Language Models
-Figure 1|Knowledge conflicts between the LLMs’ internal knowledge and retrieved knowledge from
-external sources. We report the overall results with Claude under the setting in Section 4.1.
-imperfectretrievalaugmentationanditsimpactonLLMbehaviorunderrealisticconditions(Section2).
-We conduct controlled experiments on a diverse range of general, domain-specific, and long-tail
-questions from NQ (Kwiatkowski et al., 2019), TriviaQA (Joshi et al., 2017), BioASQ (Tsatsaronis
-et al., 2015), and PopQA (Mallen et al., 2023). We observe that imperfect retrieval augmentation is
-widespread even with adept real-world search engine (such as Google Search with Web as corpus)
-– roughly 70% retrieved passages do not directly contain true answers, leading to the impeded
-performance of LLM with RAG augmentation.2
-These findings underscore the potential severity of the imperfect retrieval issue in real-world
-RAG and highlight the widespread existence of knowledge conflicts as the bottleneck to overcome
-it (Figure 1). Recent studies demonstrate that LLM-internal and external knowledge offer distinct
-advantages, but LLMs often struggle to consolidate conflicting information reliably, failing to respond
-based on collective knowledge (Jin et al., 2024; Mallen et al., 2023; Tan et al., 2024; Xie et al., 2024).
-This raises the following research question: Is there an effective method to combine internal (from LLMs’
-pretrained weights) and external (from specific corpora or knowledge bases) knowledge for more reliable
-RAG?Previous work has widely explored using external knowledge to enhance LLMs through RAG.
-We seek to further leverage LLMs’ internal knowledge to recover from RAG failures
-Motivated by these important real-world challenges, we propose Astute RAG (Section 3), a
-novel RAG approach designed to be resilient to imperfect retrieval augmentation, while preserving
-RAG grounding effect when RAG is reliable. To this end, Astute RAG needs effectively differentiate
-the reliability of the LLM’s intrinsic knowledge and the external information retrieved in RAG, utilizing
-each only when trustworthy and ensuring proper integration. Specifically, Astute RAG initially
-elicits information from LLMs’ internal knowledge to explicitly complement the passages retrieved
-from external sources. Then, Astute RAG conducts source-aware knowledge consolidation of
-information from various internal and external sources. The desiderata is combining consistent
-information, identifying conflicting information, and filtering out irrelevant information. Finally,
-Astute RAG proposes answers based on each group of consistent passages and compares the an-
-swers from different passage groups to determine the final answer. Our experiments involving Gemini
-and Claude3on various datasets (Section 4) demonstrate the superior performance of Astute RAG
-compared to previous RAG approaches designed to be robust against retrieval corruptions. Moreover,
-Astute RAG consistently outperforms baselines across different retrieval quality levels. Notably,
-2Note that some passages may contain information indirectly relevant to the answer, but may unintentionally mislead or
-distract LLMs.
-3https://www.anthropic.com/claude
+Combating LLM Hallucinations using
+Hypergraph-Driven Retrieval-Augmented
+Generation
+Yifan Feng1, Hao Hu2, Xingliang Hou3, Shiquan Liu2,
+Shihui Ying4, Shaoyi Du2, Han Hu5, Yue Gao1
+1School of Software, Tsinghua University, 100871, Beijing, China.
+2Institute of Artificial Intelligence and Robotics, Xi’an Jiaotong
+University, 710049, Xi’an, China.
+3School of Software Engineering, Xi’an Jiaotong University, 710049,
+Xi’an, China.
+4Department of Mathematics, School of Science, Shanghai University,
+200000, Shanghai, China.
+5School of Information and Electronics, Beijing Institute of Technology,
+100871, Beijing, China.
+Contributing authors: evanfeng97@gmail.com; huhao@stu.xjtu.edu.cn;
+HouXL@stu.xjtu.edu.cn; quan3759@stu.xjtu.edu.cn; shying@shu.edu.cn;
+dushaoyi@xjtu.edu.cn; hhu@bit.edu.cn; gaoyue@tsinghua.edu.cn;
+Abstract
+Large language models (LLMs) have transformed various sectors, including
+education, finance, and medicine, by enhancing content generation and decision-
+making processes. However, their integration into the medical field is cautious
+due to hallucinations, instances where generated content deviates from factual
+accuracy, potentially leading to adverse outcomes. To address this, we intro-
+duce Hyper-RAG, a hypergraph-driven Retrieval-Augmented Generation method
+that comprehensively captures both pairwise and beyond-pairwise correlations
+in domain-specific knowledge, thereby mitigating hallucinations. Experiments
+on the NeurologyCrop dataset with six prominent LLMs demonstrated that
+Hyper-RAG improves accuracy by an average of 12.3% over direct LLM use
+and outperforms Graph RAG and Light RAG by 6.3% and 6.0%, respectively.
+Additionally, Hyper-RAG maintained stable performance with increasing query
+complexity, unlike existing methods which declined. Further validation across
+1arXiv:2504.08758v1  [cs.IR]  30 Mar 2025
+nine diverse datasets showed a 35.5% performance improvement over Light RAG
+using a selection-based assessment. The lightweight variant, Hyper-RAG-Lite,
+achieved twice the retrieval speed and a 3.3% performance boost compared with
+Light RAG. These results confirm Hyper-RAG’s effectiveness in enhancing LLM
+reliability and reducing hallucinations, making it a robust solution for high-stakes
+applications like medical diagnostics.
+Keywords: Large Language Models, Retrieval-Augmented Generation, Hypergraph,
+Hallucination Mitigation
+Large language models (LLMs) have revolutionized numerous sectors through their
+advanced content generation capabilities. In education, they enable personalized learn-
+ing pathways[1, 2]; in information retrieval, they enhance the precision and relevance
+of search results[3–5]; in finance, they improve predictive analytics and support strate-
+gic decision-making[6, 7]; in medicine, they assist with preliminary diagnostics and
+patient management[8, 9]; and in elder care, they facilitate cognitive engagement and
+support for daily living activities[10]. Despite these advancements, the integration of
+LLMs within the medical domain has been relatively cautious. This hesitancy pri-
+marily stems from concerns regarding the accuracy and reliability of the generated
+content, which can introduce uncertainty into clinical decision-making processes and
+potentially lead to adverse medical outcomes[11–13]. LLMs are adept at interpreting
+input data and generating responses based on their training data, often exhibiting
+high confidence in their outputs. However, this confidence does not inherently guar-
+antee factual correctness, resulting in discrepancies commonly referred to as LLM
+hallucinations[14].
+LLM hallucinations occur when the generated content diverges from established
+facts, colloquially termed as “bullshit. ” For instance, in the diagnosis of neurological
+disorders, an LLM might incorrectly attribute symptoms to an unrelated condition,
+potentially misleading healthcare professionals[11–13]. Extensive research has been
+conducted to elucidate the underlying causes of these hallucinations, with findings
+suggesting that they likely arise from the models’ training methodology, character-
+ized by “data compression[15]. ” The training process typically involves self-supervised
+tasks that compress and reconstruct vast datasets. While LLMs can accurately recon-
+struct approximately 98% of the training data, the remaining 2% may result in
+significantly inaccurate or misleading responses[16]. Enhancing the models’ capabili-
+ties can mitigate the frequency of hallucinations; however, the persistent ”last mile”
+challenge continues to impede their reliable application in contexts that demand strin-
+gent adherence to factual accuracy, such as in medical practice. However, strategies
+aimed at enhancing the capabilities of LLMs entail substantial costs, often neces-
+sitating significant computational resources to train new models from scratch. This
+resource-intensive process poses scalability challenges and limits the feasibility of fre-
+quent model updates. Moreover, these enhancement strategies do not fully mitigate the
+loss of knowledge induced by data compression during training. As a result, even with
 2
 ================================================================================
