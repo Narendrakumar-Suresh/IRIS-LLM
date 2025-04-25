@@ -94,6 +94,12 @@ export default function Messenger() {
           className="w-[900px] lg:h-12 sm:h-12 mx-4 rounded-2xl text-black"
           value={value}
           onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              sendHandler(); // send message
+            }
+          }}
         />
         <Button
           type="submit"

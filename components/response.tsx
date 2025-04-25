@@ -53,7 +53,11 @@ export default function Response({ markdown }: { markdown: string }) {
   return (
     <div className="border-2 rounded-2xl p-2 mb-8">
       <div
-        className="w-full text-black prose p-2"
+        className="w-full text-black prose p-2 overflow-hidden word-break break-words max-w-full"
+        style={{
+          wordWrap: "break-word",
+          overflowX: "auto",
+        }}
         dangerouslySetInnerHTML={{ __html: html }}
       />
       <div className="flex m-2 w-24 justify-around">

@@ -19,7 +19,10 @@ DATA_FOLDER = "data"
 os.makedirs(DATA_FOLDER, exist_ok=True)
 
 # Initialize clients
-qdrant_client = QdrantClient( url=URL, api_key=KEY,)
+qdrant_client = QdrantClient(
+    url=URL,
+    api_key=KEY,
+)
 embedder = SentenceTransformer("all-MiniLM-L6-v2")
 
 # Create collection if not exists
