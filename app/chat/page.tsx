@@ -1,3 +1,4 @@
+"use client";
 import Messenger from "@/components/message";
 export default function Chat() {
   return (

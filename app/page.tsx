@@ -55,7 +55,7 @@ export default function Home() {
             <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_500px]">
               <div className="flex flex-col justify-center space-y-4">
                 <div className="inline-block rounded-lg bg-gray-100 px-3 py-1 text-sm text-black">
-                  Inspired by Stanford&aposs STORM
+                  {"Inspired by Stanford's STORM"}
                 </div>
                 <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none">
                   AI-Powered Research Assistant with Comprehensive Citations
@@ -66,10 +66,12 @@ export default function Home() {
                   saving you hours of manual research.
                 </p>
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                  <Button className="bg-black hover:bg-gray-800">
-                    Try IRIS-LLM Free
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                  <Button asChild>
+                    <Link href="/chat" className="bg-black hover:bg-gray-800">
+                      Try IRIS-LLM Free
+                    </Link>
                   </Button>
+
                   <Button variant="outline">Watch Demo</Button>
                 </div>
                 <div className="flex items-center gap-4 text-sm text-gray-500">
@@ -719,7 +721,7 @@ export default function Home() {
               © {new Date().getFullYear()} IRIS-LLM. All rights reserved.
             </p>
             <p className="text-center text-sm text-gray-500 md:text-left">
-              Inspired by Stanford&aposs STORM research assistant.
+              {"Inspired by Stanford's STORM research assistant."}
             </p>
           </div>
         </div>

@@ -1,19 +1,20 @@
-from ollama import chat
+import os
+import logging
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from qdrant_client import QdrantClient
-from qdrant_client.models import Filter, FieldCondition, MatchValue
 from sentence_transformers import SentenceTransformer
 import paper
-import logging
-import os
 from dotenv import load_dotenv
+from google import genai
 
+# Load environment variables
 load_dotenv()
 
 URL = os.getenv("URL")
 KEY = os.getenv("KEY")
+GEMINI_KEY = os.getenv("GEMINI_KEY")
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -21,10 +22,8 @@ logging.basicConfig(level=logging.INFO)
 # Constants
 COLLECTION_NAME = "iris_llm"
 
-# FastAPI app init
+# FastAPI app
 app = FastAPI()
-
-# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -36,129 +35,129 @@ app.add_middleware(
 first = True
 chat_context = ""
 
-
-# Models
+# Request model
 class ChatRequest(BaseModel):
     query: str
 
-
-# Qdrant + Embeddings setup
-qdrant_client = QdrantClient( url=URL, api_key=KEY,)
+# Qdrant + embeddings
+qdrant = QdrantClient(url=URL, api_key=KEY)
 embedder = SentenceTransformer("all-MiniLM-L6-v2")
 
-
 def search_qdrant_context(query: str, top_k: int = 3) -> str:
-    """
-    Search Qdrant with embedded query and return top-k matches as combined context.
-    """
     try:
-        embedding = embedder.encode(query).tolist()
-
-        search_result = qdrant_client.search(
-            collection_name=COLLECTION_NAME, query_vector=embedding, limit=top_k
-        )
-
-        if not search_result:
+        vec = embedder.encode(query).tolist()
+        results = qdrant.search(collection_name=COLLECTION_NAME, query_vector=vec, limit=top_k)
+        if not results:
             return ""
-
-        contexts = []
-        for result in search_result:
-            payload = result.payload
-            context = (
-                f"Title: {payload['title']}\n"
-                f"Authors: {payload['authors']}\n"
-                f"Summary: {payload['summary']}\n"
-                f"PDF Link: {payload['pdf_link']}"
+        chunks = []
+        for r in results:
+            p = r.payload
+            chunks.append(
+                f"**Title**: {p['title']}  \n"
+                f"**Authors**: {p['authors']}  \n"
+                f"**Summary**: {p['summary']}  \n"
+                f"**[PDF Link]({p['pdf_link']})**"
             )
-            contexts.append(context)
-
-        return "\n\n".join(contexts)
-
+        return "\n\n".join(chunks)
     except Exception as e:
-        logging.error(f"Error searching Qdrant: {str(e)}")
-        raise HTTPException(
-            status_code=500, detail="Error fetching context from Qdrant"
-        )
-
+        logging.error(f"Qdrant error: {e}")
+        raise HTTPException(500, "Error fetching context from Qdrant")
 
 @app.post("/prepare-paper")
 def generate_paper(request: ChatRequest):
     global first, chat_context
 
-    try:
-        logging.info(f"Received request: {request.query}")
+    client = genai.Client(api_key=GEMINI_KEY)
 
+    try:
+        logging.info(f"Query: {request.query}")
+
+        # On first call, fetch & index papers
         if first:
             papers = paper.fetch_arxiv_papers(request.query)
             paper.process_papers(papers)
-            context_data = search_qdrant_context(request.query)
-            if not context_data:
-                raise HTTPException(
-                    status_code=500, detail="No relevant data found in Qdrant."
-                )
-
-            prompt = f"""
-            Generate a well-structured research paper based on the following context.
-            Include proper citations using the links provided.
-
-            ### Context:
-            {context_data}
-
-            ### Instructions:
-            - Write in an academic style.
-            - Use citations where necessary.
-            - Include a structured format (Abstract, Introduction, Main Body, Conclusion).
-            """
             first = False
-        else:
-            context_data = search_qdrant_context(request.query)
+
+        # Retrieve fresh context
+        context_md = search_qdrant_context(request.query)
+        if not context_md:
+            raise HTTPException(500, "No relevant context found.")
+
+        # Build prompt
+        if "User:" not in chat_context:
+            # initial paper generation
             prompt = f"""
-            Continue the research discussion based on previous exchanges and the following new context.
+**PLEASE RESPOND IN MARKDOWN ONLY.**  
+Use `#`, `##`, etc. for headings; do **not** use LaTeX.
 
-            ### Previous Context:
-            {chat_context}
+# Research Paper
 
-            ### New Related Context:
-            {context_data}
+## Context
+{context_md}
 
-            ### New User Query:
-            {request.query}
+## Objective
+Generate a formal, citation‑supported academic paper exploring the above context.
 
-            ### Instructions:
-            - Maintain coherence with previous responses.
-            - Use citations where necessary.
-            - Follow academic writing style.
-            - For each paper referenced, ALWAYS include:
-              * Title of the paper
-              * Authors
-              * PDF link
-            - Format citations as: [Title by Authors (PDF Link)]
-            """
+## Structure
+1. ## Abstract (250–300 words)  
+   - Summarize problem, methodology, key findings, conclusions.
 
-        # Chat with Ollama
-        try:
-            response = chat(
-                model="gemma3:1b", messages=[{"role": "user", "content": prompt}]
-            )
-        except Exception as ollama_error:
-            logging.error(f"Ollama error: {ollama_error}")
-            raise HTTPException(
-                status_code=500, detail="Ollama model is not available or not running"
-            )
+2. ## Introduction  
+   - Background, research question, significance, objectives.
 
-        if not response or not response.message:
-            raise HTTPException(
-                status_code=500, detail="Ollama returned an empty response"
-            )
+3. ## Main Body  
+   - Subsections with headings, your analysis, evidence, methodology.
 
-        chat_context += f"\nUser: {request.query}\nAI: {response.message.content}"
-        return {"response": response.message.content}
+4. ## Conclusion  
+   - Summarize findings, discuss limitations, suggest future work.
 
+5. ## References  
+   - List each citation as:  
+     `[Title by Authors (PDF Link)]`
+"""
+        else:
+            # follow‑up continuation
+            prompt = f"""
+**PLEASE RESPOND IN MARKDOWN ONLY.**  
+Use `#`, `##`, etc. for headings; do **not** use LaTeX.
+
+# Continued Discussion
+
+## Previous Context
+{chat_context}
+
+## New Context
+{context_md}
+
+## User Query
+{request.query}
+
+## Instructions
+- Maintain coherence with prior exchanges.
+- Use **Markdown headings** and lists.
+- In‑text citations: `[Title by Authors (PDF Link)]`
+- Always include Title, Authors, PDF Link in References.
+"""
+
+        # Call Gemini
+        resp = client.models.generate_content(
+            model="gemini-2.0-flash-exp",
+            contents=prompt
+        )
+
+        if not resp.text:
+            raise HTTPException(500, "Empty response from Gemini")
+
+        # Update chat history
+        chat_context += f"\nUser: {request.query}\nAI: {resp.text}\n"
+        return {"response": resp.text}
+
+    except HTTPException:
+        raise
     except Exception as e:
-        logging.error(f"Error occurred: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
+        logging.error(f"Error: {e}")
+        raise HTTPException(500, str(e))
 
 @app.get("/")
 def home():
-    return {"message": "Ollama FastAPI server is running!"}
+    return {"message": "FastAPI server is running!"}
