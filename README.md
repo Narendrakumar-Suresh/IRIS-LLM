@@ -1,7 +1,3 @@
-Your README is well-structured and informative, but it can be simplified while keeping the essential details. The Docker Hub link is useful if users need to pull your images easily, so it's good to include it. Here's a more concise version:  
-
----
-
 # IRIS-LLM  
 
 > 🚧 **Active Development** – Contributions are welcome!  
